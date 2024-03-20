@@ -1,3 +1,10 @@
+.idea
+.vscode
+
 *.iso
+
 isodir
 sysroot
+clean
+bochslog.txt
+.gdb_history
