@@ -1,3 +1,7 @@
+meminfo
+Add panic
+printlibrary
+cpuinfo
 Add translation functions for pt
 Map kernel to 0xcfffffff
 Add keyboard driver

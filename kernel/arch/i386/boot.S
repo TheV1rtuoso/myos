@@ -1,3 +1,6 @@
+#define ASM_FILE 1
+#include <kernel/multiboot.h>
+
 # Declare constants for the multiboot header.
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -24,6 +27,9 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
+.extern multiboot_info_ptr
+.type multiboot_info_ptr, @object
+.global stop_cpu
 .global _start
 .global load_page_directory
 .global enable_paging
@@ -53,7 +59,16 @@ enable_paging:
 
 
 _start:
+
+	cmp $MULTIBOOT_BOOTLOADER_MAGIC, %eax # eax should contain the multiboot magicnumber
+	jz multiboot_valid
+	jmp stop_cpu
+
+	multiboot_valid:
+
+	mov %ebx, multiboot_info_ptr
 	movl $stack_top, %esp
+
 	cli
 
 	lgdt gdtr
@@ -77,8 +92,9 @@ reload_CS:
 	# Transfer control to the main kernel.
 	call kernel_main
 
-	# Hang if kernel_main unexpectedly returns.
+stop_cpu:
 	cli
+	# Hang if kernel_main unexpectedly returns.
 1:	hlt
 	jmp 1b
 .size _start, . - _start

@@ -15,7 +15,7 @@ export BOOTDIR=/boot
 export LIBDIR=$EXEC_PREFIX/lib
 export INCLUDEDIR=$PREFIX/include
 
-export CWARNING='-Wall -Wextra -pedantic-errors -Werror'
+export CWARNING='-Wall -Wextra -Werror'
 export CFLAGS="-O2 -g $CWARNING"
 export CPPFLAGS="-g  $CWARNING"
 
