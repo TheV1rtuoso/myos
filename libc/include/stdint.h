@@ -8,6 +8,8 @@ typedef signed char int8_t;
 
 typedef unsigned short uint16_t;
 typedef short int16_t;
-typedef unsigned int *uintptr_t;
+typedef unsigned int uintptr_t;
 
-typedef unsigned long size_t;
+#ifdef __cplusplus
+static_assert(sizeof(unsigned int) == sizeof(int*), "Size of unsigned int is not equal to size of int pointer");
+#endif
