@@ -25,10 +25,32 @@ stack_bottom:
 stack_top:
 
 .global _start
+.global load_page_directory
+.global enable_paging
 .type _start, @function
 # The kernel entry point.
 .section .text
 .code32
+
+load_page_directory:
+	push %ebp
+	mov %esp, %ebp
+	mov 8(%esp), %eax
+	mov %eax, %cr3
+	mov %ebp, %esp
+	pop %ebp
+	ret
+
+enable_paging:
+	push %ebp
+	mov %esp, %ebp
+	mov %cr0, %eax
+	orl  $CR0_PG, %eax
+	mov %eax, %cr0
+	mov %ebp, %esp
+	pop %ebp
+	ret
+
 
 _start:
 	movl $stack_top, %esp
@@ -37,9 +59,6 @@ _start:
 	lgdt gdtr
 
 	#TODO: check if necessary,  add paging
-	movl %cr0, %eax
-	orl $CR0_PE, %eax
-	movl %eax, %cr0
 
 reloadSegments:
 	ljmp $0x08,$reload_CS
@@ -54,7 +73,7 @@ reload_CS:
 	mov %ax, %ss
 	# Call the global constructors.
 	call _init
-
+	call paging_init
 	# Transfer control to the main kernel.
 	call kernel_main
 

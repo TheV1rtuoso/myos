@@ -1,0 +1,6 @@
+Add translation functions for pt
+Map kernel to 0xcfffffff
+Add keyboard driver
+Add blinking cursor
+Add funny pseudo userspace program
+Add malloc / automatic pt allocation
