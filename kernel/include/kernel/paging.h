@@ -7,6 +7,14 @@ typedef uint32_t pte_t;
 typedef uint32_t pde_t;
 typedef uint32_t vaddr_t;
 
+#define PAGE_SIZE 4096
+#define NUM_PTE 1024
+#define NUM_PDE 1024
+#define PT_OFFSET_BITS 12
+#define PD_OFFSET_BITS 22
+#define KERNEL_START 0xc0000000
+
+
 #define PDE_P (0x1 << 0)    // PDE Present
 #define PDE_RW (0x1 << 1)   // PDE Read/Write
 #define PDE_US (0x1 << 2)   // PDE USER/SUPERVISOR (S=0, U=1)

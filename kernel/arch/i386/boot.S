@@ -1,6 +1,9 @@
 #define ASM_FILE 1
 #include <kernel/multiboot.h>
 
+
+#define KERNEL_START 0xc0000000 #TODO remove duplication
+
 # Declare constants for the multiboot header.
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -14,14 +17,19 @@
 #define CR0_WP 0x00010000      /* Write-Protect enable in kernel mode. */
 
 # Declare a header as in the Multiboot Standard.
-.section .multiboot
+.section .multiboot.header, "aw"
 .align 4
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
 
 # Reserve a stack for the initial thread.
-.section .bss
+.section .bss, "aw"
+.align 4096
+boot_page_directory:
+	.skip 4096
+boot_page_table1:
+	.skip 4096
 .align 16
 stack_bottom:
 .skip 16384 # 16 KiB
@@ -29,14 +37,96 @@ stack_top:
 
 .extern multiboot_info_ptr
 .type multiboot_info_ptr, @object
-.global stop_cpu
+#.extern boot_page_directory
+
+# The kernel entry point.
+.section .multiboot.text, "ax"
+.code32
+
 .global _start
+.type _start, @function
+
+
+_start:
+
+	cmp $MULTIBOOT_BOOTLOADER_MAGIC, %eax # eax should contain the multiboot magicnumber
+	jnz stop_cpu
+
+	multiboot_valid:
+	mov $(multiboot_info_ptr- 0xC0000000), %edi
+	mov %ebx, (%edi)
+	cli
+
+	# Physical address of boot_page_table1.
+	# TODO: I recall seeing some assembly that used a macro to do the
+	#       conversions to and from physical. Maybe this should be done in this
+	#       code as well?
+	movl $(boot_page_table1 - 0xC0000000), %edi
+	# First address to map is address 0.
+	# TODO: Start at the first kernel page instead. Alternatively map the first
+	#       1 MiB as it can be generally useful, and there's no need to
+	#       specially map the VGA buffer.
+	movl $0, %esi
+	# Map 1023 pages. The 1024th will be the VGA text buffer.
+	movl $1023, %ecx
+
+1:
+	# Only map the kernel.
+	#cmpl $_kernel_start, %esi
+	#jl 2f
+	cmpl $(_kernel_end - 0xC0000000), %esi
+	jge 3f
+
+	# TODO Map physical address as "present, writable". Note that this maps
+	# .text and .rodata as writable. Mind security and map them as non-writable.
+	movl %esi, %edx
+	orl $0x003, %edx
+	movl %edx, (%edi)
+
+2:
+	# Size of page is 4096 bytes.
+	addl $4096, %esi
+	# Size of entries in boot_page_table1 is 4 bytes.
+	addl $4, %edi
+	# Loop to the next entry if we haven't finished.
+	loop 1b
+
+3:
+	# Map VGA video memory to 0xC03FF000 as "present, writable".
+	movl $(0x000B8000 | 0x003), boot_page_table1 - 0xC0000000 + 1023 * 4
+
+	# The page table is used at both page directory entry 0 (virtually from 0x0
+	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
+	# 768 (virtually from 0xC0000000 to 0xC03FFFFF) (thus mapping it in the
+	# higher half). The kernel is identity mapped because enabling paging does
+	# not change the next instruction, which continues to be physical. The CPU
+	# would instead page fault if there was no identity mapping.
+
+	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
+	movl $(boot_page_table1 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 0
+	movl $(boot_page_table1 - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 768 * 4
+
+	# Set cr3 to the address of the boot_page_directory.
+	movl $(boot_page_directory - 0xC0000000), %ecx
+	movl %ecx, %cr3
+
+	# Enable paging and the write-protect bit.
+	movl %cr0, %ecx
+	orl $0x80010000, %ecx
+	movl %ecx, %cr0
+
+	# Jump to higher half with an absolute jump.
+	lea 4f, %ecx
+	jmp *%ecx
+
+
+
+.section .text
+
+.global stop_cpu
 .global load_page_directory
 .global enable_paging
-.type _start, @function
-# The kernel entry point.
-.section .text
-.code32
+.extern kernel_main
 
 load_page_directory:
 	push %ebp
@@ -57,27 +147,18 @@ enable_paging:
 	pop %ebp
 	ret
 
-
-_start:
-
-	cmp $MULTIBOOT_BOOTLOADER_MAGIC, %eax # eax should contain the multiboot magicnumber
-	jz multiboot_valid
-	jmp stop_cpu
-
-	multiboot_valid:
-
-	mov %ebx, multiboot_info_ptr
+4:
 	movl $stack_top, %esp
+	# Clear the identity mapped first page as its not needed
+	#movl $0, boot_page_directory + 0
 
-	cli
 
 	lgdt gdtr
 
 	#TODO: check if necessary,  add paging
 
 reloadSegments:
-	ljmp $0x08,$reload_CS
-		# The above might need adaptation based on the exact environment and context
+	ljmp $0x08,$reload_CS # reload code segment by far jmp
 
 reload_CS:
 	mov $0x10, %ax
@@ -88,19 +169,16 @@ reload_CS:
 	mov %ax, %ss
 	# Call the global constructors.
 	call _init
-	call paging_init
+
 	# Transfer control to the main kernel.
 	call kernel_main
 
 stop_cpu:
 	cli
 	# Hang if kernel_main unexpectedly returns.
-1:	hlt
-	jmp 1b
-.size _start, . - _start
+end_loop:	hlt
+	jmp end_loop
 
-
-.globl reloadSegments
 
 ### GDT
 	.align 8
