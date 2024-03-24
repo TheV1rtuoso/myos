@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
+if (NOT CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/toolchain-i686-elf.cmake)
+endif()
+
+
 project(MyOS VERSION 1.0 LANGUAGES CXX C ASM-ATT ASM)
 
 set(SYSTEM_HEADER_PROJECTS "libc;kernel")
@@ -57,8 +62,10 @@ endforeach()
 
 #add_custom_target(build_iso  COMMENT "Installing kernel headers")
 add_custom_target(run-qemu  COMMENT "Run kernel image in qemu")
+add_custom_target(run-kernel-qemu  COMMENT "Run kernel binary in qemu with -kernel")
 
 add_dependencies(run-qemu build_iso)
+add_dependencies(run-kernel-qemu myos.kernel)
 # Optionally, setup install targets if your projects support installation
 add_custom_target(create-isodir
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/isodir"
@@ -94,4 +101,9 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
 add_custom_command(TARGET run-qemu
   DEPENDS build_iso
   COMMAND qemu-system-i386 -cdrom myos.iso
+)
+
+add_custom_command(TARGET run-kernel-qemu
+  DEPENDS myos.kernel
+  COMMAND qemu-system-i386 -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
 )
