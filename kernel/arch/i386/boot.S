@@ -40,7 +40,7 @@ stack_top:
 #.extern boot_page_directory
 
 # The kernel entry point.
-.section .multiboot.text, "ax"
+.section .multiboot.text, "a"
 .code32
 
 .global _start
@@ -51,6 +51,14 @@ _start:
 
 	cmp $MULTIBOOT_BOOTLOADER_MAGIC, %eax # eax should contain the multiboot magicnumber
 	jnz stop_cpu
+
+test_a20:
+	in $0x92, %al
+	test %al, 2
+	jnz multiboot_valid
+	or $2, %al
+	and %al, 0xFE
+	out %al, $0x92
 
 	multiboot_valid:
 	mov $(multiboot_info_ptr- 0xC0000000), %edi
