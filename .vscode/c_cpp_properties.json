@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/kernel/include",
+                "${workspaceFolder}/libc/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/i686-elf-g++",
+            "intelliSenseMode": "linux-gcc-x86",
+            "compilerArgs": [
+                "--sysroot=/home/neo/Projects/myos/sysroot",
+                "-isystem=/usr/include",
+                "-D__is_kernel",
+                "-Iinclude"
+            ]
+        }
+    ],
+    "version": 4
+}
