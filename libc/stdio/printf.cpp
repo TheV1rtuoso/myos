@@ -82,30 +82,47 @@ uint32_t print_hex64(uint64_t n)
            count; // Include the bytes written by "0x" and the hex digits
 }
 
-int print_decimal(int n)
-{
-    if (n < 0) {
-        putchar('-');
-        n = -n;
-    }
+
+int print_decimal(int n) {
     if (n == 0) {
         putchar('0');
         return 1;
     }
+
+    int count = 0;
+    if (n == INT_MIN) {
+        // Special case for INT_MIN
+        print("-2147483648", 11);
+        return 11; // Number of characters in "-2147483648"
+    } else if (n < 0) {
+        putchar('-');
+        n = -n;
+        count++;
+    }
+
     char buf[32];
     int i = 0;
-    do {
+    while (n > 0) {
         buf[i++] = '0' + n % 10;
-    } while ((n /= 10) > 0);
-    print(buf, i);
-    return i;
+        n /= 10;
+    }
+
+    // Reverse the buffer before printing
+    for (int j = i - 1; j >= 0; j--) {
+        putchar(buf[j]);
+    }
+
+    return count + i; // Total printed characters
 }
 
 int32_t puts(const char *string)
 {
-    int32_t written = print(string, strlen(string));
-    written += putchar('\n');
-    return written;
+    uint32_t len = strlen(string);
+    if (!print(string, len))
+        return -1;
+    if (!putchar('\n'))
+        return -1;
+    return len + 1;
 }
 
 
@@ -113,44 +130,36 @@ int printf(const char *__restrict format, ...)
 {
     va_list parameters;
     va_start(parameters, format);
-
     int written = 0;
 
     while (*format != '\0') {
-        size_t maxrem = INT_MAX - written;
+        size_t maxrem = INT_MAX - written; //TODO check
 
-        if (format[0] != '%' || format[1] == '%') {
-            if (format[0] == '%')
-                format++;
-            size_t amount = 1;
-            while (format[amount] && format[amount] != '%')
-                amount++;
-            if (maxrem < amount) {
-                // TODO: Set errno to EOVERFLOW.
+        if (*format != '%') {
+            if (!putchar(*format))
                 return -1;
-            }
-            if (!print(format, amount))
-                return -1;
-            format += amount;
-            written += amount;
+            format++;
             continue;
         }
-
         const char *format_begun_at = format++;
-
-        if (*format == 'c') {
+        switch (*format) {
+        case '%':{
             format++;
-            char c = (char)va_arg(parameters, int /*char promotes to int*/);
-            if (!maxrem) {
-                // TODO: Set errno to EOVERFLOW.
-                return -1;
-            }
-            if (!print(&c, sizeof(c)))
+            putchar('%');
+            written++;
+            continue;
+        }
+        case 'c': {
+            format++;
+            char c = (char)va_arg(parameters, int);
+            if (!putchar(c))
                 return -1;
             written++;
-        } else if (*format == 's') {
+            continue;
+        }
+        case 's': {
             format++;
-            const char *str = va_arg(parameters, const char *);
+            char *str = va_arg(parameters, char *);
             size_t len = strlen(str);
             if (maxrem < len) {
                 // TODO: Set errno to EOVERFLOW.
@@ -159,25 +168,30 @@ int printf(const char *__restrict format, ...)
             if (!print(str, len))
                 return -1;
             written += len;
-        } else if (*format == 'd' || *format == 'i') {
-            putchar('*');
+            break;
+        }
+        case 'x': {
             format++;
-            int i = va_arg(parameters, int);
-            written += print_decimal(i);
-        } else {
+            uint32_t xint = va_arg(parameters, unsigned int);
+            written += print_hex32(xint);
+            break;
+        }
+        case 'd': {
+            format++;
+            uint32_t xint = va_arg(parameters, unsigned int);
+            written += print_decimal(xint);
+            break;
+        }
+        /*case 'i':
+            assert(0);
+        case 'u':
+            assert(0);*/
+        default: {
+            if (!putchar('%'))
+                return -1; // ignore and print formatter
             format = format_begun_at;
-            size_t len = strlen(format);
-            if (maxrem < len) {
-                // TODO: Set errno to EOVERFLOW.
-                return -1;
-            }
-            if (!print(format, len))
-                return -1;
-            written += len;
-            format += len;
+        }
         }
     }
-    uint32_t len = strlen(format);
-    print(format, len);
-    return len;
+    return written;
 }
