@@ -83,7 +83,8 @@ uint32_t print_hex64(uint64_t n)
 }
 
 
-int print_decimal(int n) {
+int print_decimal(int n)
+{
     if (n == 0) {
         putchar('0');
         return 1;
@@ -143,7 +144,7 @@ int printf(const char *__restrict format, ...)
         }
         const char *format_begun_at = format++;
         switch (*format) {
-        case '%':{
+        case '%': {
             format++;
             putchar('%');
             written++;
