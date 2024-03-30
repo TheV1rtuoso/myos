@@ -48,8 +48,8 @@ add_custom_target(install_kernel_binary
     VERBATIM
 )
 add_dependencies(create_isodir install_kernel_binary)
-
 file(GLOB_RECURSE KERNEL_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
+foreach(RELATIVE_HEADER_PATH IN LISTS KERNEL_HEADERS)
     add_custom_command(
         TARGET install_kernel_headers
         DEPENDS "${RELATIVE_HEADER_PATH}"
