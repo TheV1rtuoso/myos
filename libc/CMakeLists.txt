@@ -24,6 +24,7 @@ endif()
 file(GLOB_RECURSE LIBC_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
 
 add_custom_target(install_libc_headers)
+add_custom_target(make_libc_directories)
 
 # Copy LibC's headers into the sysroot to satisfy libc++'s include priority requirements.
 foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
@@ -31,10 +32,20 @@ foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
     string(REPLACE "../" "" subdirectory "${directory}")
     file(MAKE_DIRECTORY "${SYSROOT}/${PREFIX}/${subdirectory}")
     add_custom_command(
+        TARGET make_libc_directories
+        PRE_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${PREFIX}/${subdirectory}"
+        OUTPUTS "${SYSROOT}/${PREFIX}/${subdirectory}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        VERBATIM
+    )
+    add_custom_command(
         TARGET install_libc_headers
         PRE_BUILD
+        OUTPUTS "${SYSROOT}/${PREFIX}/${subdirectory}/${filename}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${PREFIX}/${subdirectory}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        DEPENDS make_libc_directories
         VERBATIM
     )
 endforeach()
@@ -50,17 +61,8 @@ add_compile_definitions(${KERNEL_ARCH_CFLAGS})
 add_compile_definitions(${KERNEL_ARCH_CPPFLAGS})
 
 # Source files
-set(FREEOBJS
-  stdio/putchar.c
-  stdio/puts.c
-  stdlib/abort.c
-  string/memcmp.c
-  string/memcpy.c
-  string/memmove.c
-  string/memset.c
-  string/strlen.cpp
-  stdio/printf.cpp
-)
+file(GLOB LIBC_SOURCES "stdio/*.cpp" "stdlib/*.cpp" "string/*.cpp")
+set(FREEOBJS ${LIBC_SOURCES})
 
 # Convert FREEOBJS to object library
 add_library(freeobjs OBJECT ${FREEOBJS})

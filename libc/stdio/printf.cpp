@@ -101,6 +101,14 @@ int print_decimal(int n)
     return i;
 }
 
+int32_t puts(const char *string)
+{
+    int32_t written = print(string, strlen(string));
+    written += putchar('\n');
+    return written;
+}
+
+
 int printf(const char *__restrict format, ...)
 {
     va_list parameters;
@@ -132,7 +140,7 @@ int printf(const char *__restrict format, ...)
 
         if (*format == 'c') {
             format++;
-            char c = (char)va_arg(parameters, int /* char promotes to int */);
+            char c = (char)va_arg(parameters, int /*char promotes to int*/);
             if (!maxrem) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
@@ -169,7 +177,7 @@ int printf(const char *__restrict format, ...)
             format += len;
         }
     }
-
-    va_end(parameters);
-    return written;
+    uint32_t len = strlen(format);
+    print(format, len);
+    return len;
 }

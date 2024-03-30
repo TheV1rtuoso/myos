@@ -8,3 +8,4 @@ clean
 bochslog.txt
 .gdb_history
 build/
+.vscode/
