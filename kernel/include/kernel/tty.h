@@ -1,15 +1,39 @@
 #pragma once
+#include <kernel/vga.h>
+#include <span.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-void terminal_initialize(void);
-void terminal_putchar(char c);
-void terminal_write(const char *data, size_t size);
-void terminal_writestring(const char *data);
+class TTY {
+public:
+    TTY(const size_t width, const size_t height, VGAEntry *vga_memory);
+    TTY(TTY &&) = default;
+    TTY(const TTY &) = default;
+    TTY &operator=(TTY &&) = default;
+    TTY &operator=(const TTY &) = default;
+    ~TTY() = default;
 
-#ifdef __cplusplus
-}
-#endif
+    void fill(VGAEntry entry);
+    void fill(uint8_t c);
+    void putchar(int8_t c);
+    void shift_screen_up(uint32_t delta);
+    void newline(void);
+    void write(const char *data, size_t size);
+    void writestring(const char *data);
+    void set_color(VGAColorEntry);
+    void set_clear()
+    {
+        fill(' ');
+    };
+    void putentryat(VGAEntry entry, size_t x, size_t y);
+
+private:
+    size_t m_width;
+    size_t m_height;
+    libc::span<VGAEntry> m_console;
+    size_t m_terminal_row = 0;
+    size_t m_terminal_column = 0;
+    VGAColorEntry m_terminal_color = VGAColorEntry(GREEN, BLACK);
+};
+
+extern TTY CurrentTTY;

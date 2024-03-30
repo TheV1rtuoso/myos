@@ -1,35 +1,66 @@
 #ifndef ARCH_I386_VGA_H
 #define ARCH_I386_VGA_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-enum vga_color {
-    VGA_COLOR_BLACK = 0,
-    VGA_COLOR_BLUE = 1,
-    VGA_COLOR_GREEN = 2,
-    VGA_COLOR_CYAN = 3,
-    VGA_COLOR_RED = 4,
-    VGA_COLOR_MAGENTA = 5,
-    VGA_COLOR_BROWN = 6,
-    VGA_COLOR_LIGHT_GREY = 7,
-    VGA_COLOR_DARK_GREY = 8,
-    VGA_COLOR_LIGHT_BLUE = 9,
-    VGA_COLOR_LIGHT_GREEN = 10,
-    VGA_COLOR_LIGHT_CYAN = 11,
-    VGA_COLOR_LIGHT_RED = 12,
-    VGA_COLOR_LIGHT_MAGENTA = 13,
-    VGA_COLOR_LIGHT_BROWN = 14,
-    VGA_COLOR_WHITE = 15,
+class VGAEntry;
+
+constexpr size_t VGA_WIDTH{80};
+constexpr size_t VGA_HEIGHT{25};
+
+
+enum VGAColor : uint8_t {
+    BLACK = 0,
+    BLUE = 1,
+    GREEN = 2,
+    CYAN = 3,
+    RED = 4,
+    MAGENTA = 5,
+    BROWN = 6,
+    LIGHT_GREY = 7,
+    DARK_GREY = 8,
+    LIGHT_BLUE = 9,
+    LIGHT_GREEN = 10,
+    LIGHT_CYAN = 11,
+    LIGHT_RED = 12,
+    LIGHT_MAGENTA = 13,
+    LIGHT_BROWN = 14,
+    WHITE = 15,
 };
 
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
-{
-    return fg | bg << 4;
-}
+class VGAColorEntry {
+public:
+    VGAColorEntry(VGAColor fg, VGAColor bg) : m_fg(fg), m_bg(bg){};
+    VGAColorEntry(VGAColorEntry &&) = default;
+    VGAColorEntry(const VGAColorEntry &) = default;
+    VGAColorEntry &operator=(VGAColorEntry &&) = default;
+    VGAColorEntry &operator=(const VGAColorEntry &) = default;
+    ~VGAColorEntry() = default;
 
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
-{
-    return (uint16_t)uc | (uint16_t)color << 8;
-}
+private:
+    uint8_t m_fg : 4;
+    uint8_t m_bg : 4;
+};
+
+static_assert(sizeof(VGAColorEntry) == 1,
+              "VGAColorEntry is not 1 byte in size");
+
+class __attribute__((packed)) VGAEntry {
+public:
+    VGAEntry(uint8_t character, VGAColorEntry color)
+        : m_character(character), m_color(color){};
+    VGAEntry(VGAEntry &&) = default;
+    VGAEntry(const VGAEntry &) = default;
+    VGAEntry &operator=(VGAEntry &&) = default;
+    VGAEntry &operator=(const VGAEntry &) = default;
+    ~VGAEntry() = default;
+
+private:
+    uint8_t m_character;
+    VGAColorEntry m_color;
+};
+
+static_assert(sizeof(VGAEntry) == 2, "VGAEntry is not 2 bytes");
 
 #endif

@@ -1,51 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
-#project(MyLibrary VERSION 1.0)
 
-# Set the default host if not specified
-if(NOT DEFINED TARGET_ARCH)
-  execute_process(
-    COMMAND ../default-host.sh
-    OUTPUT_VARIABLE TARGET_ARCH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-endif()
 
-# Determine the host architecture
-execute_process(
-  COMMAND ../target-triplet-to-arch.sh ${TARGET_ARCH}
-  OUTPUT_VARIABLE HOSTARCH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+add_custom_target(install_lib_headers COMMENT "Install libc headers")
+add_dependencies(install_headers install_lib_headers)
 
-if(NOT DEFINED HOST_ARCH)
-    set(HOSTARCH i386)
-endif()
 
 file(GLOB_RECURSE LIBC_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
-
-add_custom_target(install_libc_headers)
-add_custom_target(make_libc_directories)
 
 # Copy LibC's headers into the sysroot to satisfy libc++'s include priority requirements.
 foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
     get_filename_component(directory ${RELATIVE_HEADER_PATH} DIRECTORY)
     string(REPLACE "../" "" subdirectory "${directory}")
-    file(MAKE_DIRECTORY "${SYSROOT}/${PREFIX}/${subdirectory}")
     add_custom_command(
-        TARGET make_libc_directories
-        PRE_BUILD
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${PREFIX}/${subdirectory}"
-        OUTPUTS "${SYSROOT}/${PREFIX}/${subdirectory}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT "${SYSROOT}/${PREFIX}/${subdirectory}"
         VERBATIM
     )
     add_custom_command(
-        TARGET install_libc_headers
-        PRE_BUILD
-        OUTPUTS "${SYSROOT}/${PREFIX}/${subdirectory}/${filename}"
+        TARGET install_lib_headers
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${PREFIX}/${subdirectory}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        DEPENDS make_libc_directories
+        DEPENDS "${RELATIVE_HEADER_PATH}"
         VERBATIM
     )
 endforeach()
@@ -62,22 +37,11 @@ add_compile_definitions(${KERNEL_ARCH_CPPFLAGS})
 
 # Source files
 file(GLOB LIBC_SOURCES "stdio/*.cpp" "stdlib/*.cpp" "string/*.cpp")
-set(FREEOBJS ${LIBC_SOURCES})
+set(LIBK_OBJECTS ${LIBC_SOURCES})
 
 # Convert FREEOBJS to object library
-add_library(freeobjs OBJECT ${FREEOBJS})
-target_compile_options(freeobjs PUBLIC ${CMAKE_C_FLAGS} ${CPPFLAGS})
 
-# LIBK objects
-set(LIBK_OBJS ${FREEOBJS})
+add_library(libk STATIC ${LIBK_OBJECTS})
+add_dependencies(libk install_headers)
 
-add_library(libk OBJECT ${LIBK_OBJS})
-target_compile_options(libk PUBLIC ${LIBK_CFLAGS} ${LIBK_CPPFLAGS})
-
-# Create the libk.a static library
-add_library(libk_static STATIC ${FREEOBJS})
-add_dependencies(libk install_all_headers)
-add_dependencies(libk_static install_all_headers)
-add_dependencies(freeobjs install_all_headers)
-set_target_properties(libk_static PROPERTIES OUTPUT_NAME "libk")
-install(TARGETS libk_static ARCHIVE DESTINATION ${SYSROOT}/usr/lib)
+install(TARGETS libk ARCHIVE DESTINATION ${SYSROOT}/usr/lib)

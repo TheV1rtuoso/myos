@@ -8,10 +8,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 
-# Compiler flags
+add_custom_target(install_kernel_headers COMMENT "Install libc headers")
+add_dependencies(install_headers install_kernel_headers)
+
 add_compile_options(-D__is_kernel -Iinclude)
 
-# Linker flags
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib -lgcc")
 
 # Architecture-specific settings
@@ -29,7 +30,7 @@ set(SOURCES ${ARCH_SOURCES} ${KERNEL_SOURCES})
 # Add executable target
 add_executable(myos.kernel ${SOURCES} )
 target_link_libraries(myos.kernel PUBLIC libk)
-add_dependencies(myos.kernel install_all_headers)
+add_dependencies(myos.kernel install_headers)
 
 
 # Set linker script
@@ -39,31 +40,21 @@ set_target_properties(myos.kernel PROPERTIES LINK_FLAGS "-T ${LINKER_SCRIPT}")
 set(CMAKE_INSTALL_PREFIX "${ROOT_DIR}/build")
 
 install(TARGETS myos.kernel DESTINATION "${SYSROOT}/boot")
-install(TARGETS myos.kernel DESTINATION "${SYSROOT}/boot")
-add_custom_target(install_kernel_binary  COMMENT "Installing kernel binary")
-add_dependencies(install_kernel_binary myos.kernel)
 
-file(MAKE_DIRECTORY "${SYSROOT}/${BOOTDIR}")
-add_custom_command(
-    TARGET install_kernel_binary
-    POST_BUILD
+add_custom_target(install_kernel_binary
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${BOOTDIR}/"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_BINARY_DIR}/kernel/myos.kernel" "${SYSROOT}/${BOOTDIR}/myos.kernel"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DEPENDS myos.kernel
     VERBATIM
 )
+add_dependencies(create_isodir install_kernel_binary)
 
-# Custom target for header installation (optional)
-add_custom_target(install_kernel_headers  COMMENT "Installing kernel headers")
 file(GLOB_RECURSE KERNEL_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
-foreach(RELATIVE_HEADER_PATH IN LISTS KERNEL_HEADERS)
-    get_filename_component(directory ${RELATIVE_HEADER_PATH} DIRECTORY)
-    string(REPLACE "../" "" subdirectory "${directory}")
-    file(MAKE_DIRECTORY "${SYSROOT}/${INCLUDEDIR}/kernel")
     add_custom_command(
         TARGET install_kernel_headers
-        PRE_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${INCLUDEDIR}/kernel"
+        DEPENDS "${RELATIVE_HEADER_PATH}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${INCLUDEDIR}/kernel"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different  "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${INCLUDEDIR}/kernel"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         VERBATIM
     )

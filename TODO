@@ -5,6 +5,7 @@ smart pointer impl -> VGA Memory Access (stdout wrapper)
 !! printlibrary
 !! libc setup
 ! cleanup and improve cmake setup / fix iso
+assert
 nicer abort: libc to see if kernel or userspace aborted: abort()
 cpuinfo
 Add keyboard driver
@@ -12,3 +13,4 @@ Add blinking cursor
 high level interrupts
 Add funny pseudo userspace program
 Add malloc / automatic pt allocation
+push segments for priv change in interrupts

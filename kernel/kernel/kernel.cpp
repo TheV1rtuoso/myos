@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 multiboot_info_t *multiboot_info_ptr = nullptr;
+VGAEntry *VGA_MEMORY = (VGAEntry *)0xC03FF000; // remapped after boot
 
 int print_memory_map()
 {
@@ -24,9 +25,9 @@ int print_memory_map()
         putchar(' ');
         print_hex64(mmmt->len);
         putchar(' ');
-        print_hex32(mmmt->type);
-        putchar(' ');
         print_hex32(mmmt->size);
+        putchar(' ');
+        print_hex32(mmmt->type);
         putchar('\n');
 
         if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
@@ -42,10 +43,12 @@ int print_memory_map()
 }
 extern "C" void kernel_main(void)
 {
-    terminal_initialize();
+
+    CurrentTTY = TTY(VGA_WIDTH, VGA_HEIGHT, (VGAEntry *)0xC03FF000);
+    CurrentTTY.set_clear();
     idtr_init();
+
     printf("Hello, kernel World!\n");
-    __asm__ volatile("int $0x3");
     if (cpuid_apic()) {
         printf("CPU has APIC\n");
     } else {
@@ -56,4 +59,15 @@ extern "C" void kernel_main(void)
         printf("No multiboot header found\n");
     }
     print_memory_map();
+
+    enable_interrupts();
+    __asm__ volatile("int $0x41");
+    __asm__ volatile("int $0x42");
+    __asm__ volatile("int $0x43");
+    __asm__ volatile("int $0x44");
+    __asm__ volatile("int $0x45");
+    __asm__ volatile("int $0xe");
+    printf("kernel_main finished\n");
+    //uint8_t *unmapped_mem = (uint8_t *)0x30000000;
+    //(*unmapped_mem)++;
 }

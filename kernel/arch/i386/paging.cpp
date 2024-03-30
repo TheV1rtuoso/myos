@@ -1,6 +1,6 @@
 #include <kernel/paging.h>
-#include <stdio.h>
 #include <kernel/panic.h>
+#include <stdio.h>
 
 // TODO rewrite highlevel pagining functions
 
@@ -38,7 +38,8 @@ void clear_page_directory(void)
     }
 }
 
-constexpr uint32_t *get_page_directory_entry(uintptr_t vaddr) {
+constexpr uint32_t *get_page_directory_entry(uintptr_t vaddr)
+{
     vaddr = vaddr >> PD_OFFSET_BITS;
     return &boot_page_directory[vaddr];
 }

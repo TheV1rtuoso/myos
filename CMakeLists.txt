@@ -4,7 +4,6 @@ if (NOT CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/toolchain-i686-elf.cmake)
 endif()
 
-
 project(MyOS VERSION 1.0 LANGUAGES CXX C ASM-ATT ASM)
 
 set(SYSTEM_HEADER_PROJECTS "libc;kernel")
@@ -41,53 +40,56 @@ set(LIBDIR "${EXEC_PREFIX}/lib")
 set(INCLUDEDIR "${PREFIX}/include")
 
 # Sysroot configuration
-add_compile_options(--sysroot=${SYSROOT} -isystem=${INCLUDEDIR} -O2 -g)
+add_compile_options(--sysroot=${SYSROOT} -isystem=${INCLUDEDIR})
 # Compiler flags
-add_compile_options(-Wall -Wextra -Werror  -O2 -g)
+add_compile_options(-Wall -Wextra -Werror -g -O2)
 
 #TODO sanatizer implementation
 #add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 
-file(GLOB_RECURSE LIBC_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/kernel" CONFIGURE_DEPENDS "*.h")
-add_custom_target(install_all_headers  COMMENT "Installing kernel headers")
+add_custom_target(install_headers  COMMENT "Installing kernel headers")
+add_custom_target(create_isodir)
 
-# Copy LibC's headers into the sysroot to satisfy libc++'s include priority requirements.
-
-# Add subdirectories for each project
 foreach(PROJECT IN LISTS PROJECTS)
   add_subdirectory(${PROJECT})
-  add_dependencies(install_all_headers "install_${PROJECT}_headers")
 endforeach()
 
-#add_custom_target(build_iso  COMMENT "Installing kernel headers")
-add_custom_target(run-qemu  COMMENT "Run kernel image in qemu")
-add_custom_target(run-kernel-qemu  COMMENT "Run kernel binary in qemu with -kernel")
 
-add_dependencies(run-qemu build_iso)
-add_dependencies(run-kernel-qemu myos.kernel)
-# Optionally, setup install targets if your projects support installation
-add_custom_target(create-isodir
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/isodir"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/isodir/boot"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/isodir/boot/grub"
-    COMMENT "Creating isodir directories"
+
+add_custom_target(build_iso)
+
+add_custom_target(run-qemu
+  DEPENDS myos.kernel
+  COMMAND qemu-system-i386 -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
+  COMMENT "Run kernel binary in qemu with -kernel"
 )
 
-add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/isodir/boot/myos.kernel"
-    COMMAND ${CMAKE_COMMAND} -E copy "${SYSROOT}/boot/myos.kernel" "${CMAKE_BINARY_DIR}/isodir/boot/myos.kernel"
-    DEPENDS install_kernel_binary create-isodir
+add_custom_target(run-qemu-iso
+  DEPENDS build_iso
+  COMMAND qemu-system-i386 -cdrom myos.iso -serial file:${CMAKE_CURRENT_BINARY_DIR}/output.txt
+  COMMENT "Run kernel image in qemu"
 )
 
-# Create the GRUB configuration file
-file(WRITE "${CMAKE_BINARY_DIR}/isodir/boot/grub/grub.cfg"
-"menuentry \"myos\" {\n\tmultiboot /boot/myos.kernel\n}\n")
+add_custom_target(debug-kernel-qemu
+  DEPENDS myos.kernel
+  COMMAND qemu-system-i386 -s -S -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
+  COMMENT "Debug kernel binary in qemu with -kernel"
+)
 
-# Custom target to create an ISO image using grub-mkrescue
-add_custom_target(build_iso ALL
-    COMMAND grub-mkrescue -o "${CMAKE_BINARY_DIR}/myos.iso" "${CMAKE_BINARY_DIR}/isodir"
-    DEPENDS "${CMAKE_BINARY_DIR}/isodir/boot/myos.kernel"
+add_dependencies(build_iso create_isodir)
+
+add_custom_command(TARGET create_isodir
+    COMMAND ${CMAKE_COMMAND} -E make_directory "isodir/boot/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "isodir/boot/grub"
+    COMMAND ${CMAKE_COMMAND} -E copy "${SYSROOT}/boot/myos.kernel" "isodir/boot/myos.kernel"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/grub.cfg" "isodir/boot/grub/grub.cfg"
+    DEPENDS "${CMAKE_CURRENT_LIST_DIR}/grub.cfg"
+    COMMENT "Creating isodir structure, copy kernel"
+)
+
+add_custom_command(TARGET build_iso
+    COMMAND grub-mkrescue -o "myos.iso" "isodir"
     COMMENT "Creating ISO image"
 )
 
@@ -96,14 +98,5 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
     "${CMAKE_CURRENT_BINARY_DIR}/myos.iso"
     "${CMAKE_CURRENT_BINARY_DIR}/isodir"
 )
-#!/bin/sh
 
-add_custom_command(TARGET run-qemu
-  DEPENDS build_iso
-  COMMAND qemu-system-i386 -cdrom myos.iso
-)
 
-add_custom_command(TARGET run-kernel-qemu
-  DEPENDS myos.kernel
-  COMMAND qemu-system-i386 -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
-)
