@@ -5,7 +5,7 @@ vgaromimage:     file=/usr/share/bochs/VGABIOS-lgpl-latest
 
 ata0: enabled=true, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=none
-ata0-slave: type=cdrom, path=myos.iso, status=inserted
+ata0-slave: type=cdrom, path=build/myos.iso, status=inserted
 #gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 
 boot:            cdrom

@@ -44,6 +44,9 @@ add_compile_options(--sysroot=${SYSROOT} -isystem=${INCLUDEDIR})
 # Compiler flags
 add_compile_options(-Wall -Wextra -Werror -g -O2)
 
+#disable RTTI, Exceptions
+add_compile_options(-fno-exceptions -fno-rtti)
+
 #TODO sanatizer implementation
 #add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
@@ -69,6 +72,13 @@ add_custom_target(run-qemu-iso
   DEPENDS build_iso
   COMMAND qemu-system-i386 -cdrom myos.iso -serial file:${CMAKE_CURRENT_BINARY_DIR}/output.txt
   COMMENT "Run kernel image in qemu"
+)
+
+add_custom_target(run-bochs
+  DEPENDS build_iso
+  COMMAND bochs -q -f bochsrc.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  COMMENT "Run kernel image in bochs"
 )
 
 add_custom_target(debug-kernel-qemu
@@ -98,5 +108,3 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
     "${CMAKE_CURRENT_BINARY_DIR}/myos.iso"
     "${CMAKE_CURRENT_BINARY_DIR}/isodir"
 )
-
-
