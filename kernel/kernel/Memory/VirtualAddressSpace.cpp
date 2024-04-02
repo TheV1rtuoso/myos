@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <kernel/paging.h>
 #include <kernel/Memory/VirtualAddressSpace.h>
 #include <kernel/Memory/VirtualAddress.h>
 #include <kernel/Memory/PhysicalAddress.h>
