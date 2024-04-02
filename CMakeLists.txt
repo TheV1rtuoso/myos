@@ -45,7 +45,9 @@ add_compile_options(--sysroot=${SYSROOT} -isystem=${INCLUDEDIR})
 add_compile_options(-Wall -Wextra -Werror -g -O2)
 
 #disable RTTI, Exceptions
-add_compile_options(-fno-exceptions -fno-rtti)
+#add_compile_options(-fno-exceptions -fno-rtti)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
+
 
 #TODO sanatizer implementation
 #add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
