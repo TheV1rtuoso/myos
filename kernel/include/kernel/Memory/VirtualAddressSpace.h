@@ -1,16 +1,18 @@
+#pragma once
 #include <kernel/types.h>
 #include <kernel/Memory/PageDirectory.h>
+#include <kernel/Memory/Heap.h>
 
 class PhysicalAddress;
 class VirtualAddress;
 constexpr u32 KERNEL_START = 0xc0000000;
 
 
-PageDirectory* get_cr3() {
-    PageDirectory *out;
-    __asm__("mov %%cr3, %%ecx":"=c"(out):);
-    return out;
-}
+PageDirectory* get_cr3();
+
+//FIXME: get_actual free start
+static u8* KERNEL_FREE_START = reinterpret_cast<u8*>(0xc0400000);
+constexpr size_t MAX_VADDR = 0xffffffff;
 
 
 class VirtualAddressSpace {
@@ -28,8 +30,9 @@ public:
 
     PhysicalAddress translate_to_physical_addr(VirtualAddress vaddr);
     VirtualAddress get_virtual_addresses(size_t pages_n);
-    void mmap(VirtualAddress vaddr, PhysicalAddress phyaddr);
+    void mmap(VirtualAddress vaddr, PhysicalAddress phyaddr, size_t n, u16 flags);
 
 private:
 PageDirectory* m_page_directory;
+WatermarkAllocator KernelVAddressSpaceAllocator {KERNEL_FREE_START, MAX_VADDR};
 };

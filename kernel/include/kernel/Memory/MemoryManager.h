@@ -1,4 +1,10 @@
+#pragma once
 #include <kernel/types.h>
+
+class PhysicalAddress;
+class PhysicalAddressSpace;
+class VirtualAddress;
+class VirtualAddressSpace;
 
 class MemoryManager {
 public:
@@ -11,7 +17,7 @@ public:
     ~MemoryManager() = default;
 
     [[nodiscard]] void *get_pages(size_t n, int flags);
-    void mmap(VirtualAddress vaddr, PhysicalAddress phyaddr);
+    void mmap(VirtualAddress vaddr, PhysicalAddress phyaddr, size_t n, u16 flags);
 
 private:
     PhysicalAddressSpace& m_phy_space;

@@ -1,4 +1,4 @@
-#include <kernel/PageFault.h>
+#include <kernel/Memory/PageFault.h>
 #include <kernel/interrupts.h>
 #include <kernel/panic.h>
 #include <stdint.h>
@@ -23,11 +23,11 @@ void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags)
     descriptor->reserved = 0;
 }
 
+
 void idtr_init(void)
 {
     void **_isr_stub_table = &isr_stub_table;
     //(if (isr_stub_table != isr_stub_table_) panic("idtr_init!");
-    print_hex32((uintptr_t)&_isr_stub_table);
     idtr.base = (uintptr_t)&idt;
     idtr.limit = sizeof(idt_entry_t) * IDT_MAX_DESCRIPTORS - 1;
 
@@ -41,13 +41,15 @@ static size_t interrupt_counter = 0;
 
 void exception_handler(InterruptFrame intr_frame)
 {
-    printf("Hello from exception handler");
     interrupt_counter++;
 
     if (!is_cpu_interrupt(intr_frame.vector_no)) {
+        printf("CPU Exception %x, Reason: %s @rip: %p\n",
+               intr_frame.vector_no,
+               get_interrupt_name(static_cast<InterruptVector>(intr_frame.vector_no)),
+               intr_frame.eip);
         return;
     }
-    return;
     auto interrupt = static_cast<InterruptVector>(intr_frame.vector_no);
     printf("CPU Interrupt %x, Reason: %s @rip: %p\n ",
            intr_frame.vector_no,

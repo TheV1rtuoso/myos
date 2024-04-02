@@ -16,9 +16,9 @@ constexpr u32 PDE_PAT = 0x1 << 12; // PDE Page-Attribute-Table
 
 class PageDirectoryEntry {
 public:
-
+PageDirectoryEntry(PhysicalAddress page_table_addr, u16 flags) : m_pde(page_table_addr.get() | flags) {};
 PageTable* page_table_addr() {
-    return reinterpret_cast<PageTable*>(m_pde & 0xffe << 12);
+    return reinterpret_cast<PageTable*>(m_pde & 0xfffff << 12);
 }
 bool check_flag(u16 flag) {
     //TODO check max flag value
@@ -51,7 +51,12 @@ public:
     PageDirectoryEntry& get(u32 idx) {
         return m_pd[idx];
     }
-
+    PageDirectoryEntry& operator[](u32 idx) {
+        return m_pd[idx];
+    }
+    const PageDirectoryEntry& operator[](u32 idx) const {
+        return m_pd[idx];
+    }
 
 private:
     PageDirectoryEntry m_pd [NUM_PTE];

@@ -1,4 +1,5 @@
-
+#pragma once
+#include <stdint.h>
 using u64 = __UINT64_TYPE__;
 using u32 = __UINT32_TYPE__;
 using u16 = __UINT16_TYPE__;
@@ -17,7 +18,7 @@ constexpr u64 TiB = KiB * KiB * KiB * KiB;
 constexpr u64 PiB = KiB * KiB * KiB * KiB * KiB;
 constexpr u64 EiB = KiB * KiB * KiB * KiB * KiB * KiB;
 
-template<bool condition, class TrueType, class FalseType>
+/*template<bool condition, class TrueType, class FalseType>
 struct __Conditional {
     using Type = TrueType;
 };
@@ -29,6 +30,4 @@ struct __Conditional<false, TrueType, FalseType> {
 
 template<bool condition, class TrueType, class FalseType>
 using Conditional = typename __Conditional<condition, TrueType, FalseType>::Type;
-
-
-using uintptr_t = Conditional<sizeof(void*) == 4, u32, u64>;
+*/

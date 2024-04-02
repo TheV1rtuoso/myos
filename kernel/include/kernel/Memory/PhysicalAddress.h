@@ -1,4 +1,4 @@
-
+#pragma once
 #include <kernel/types.h>
 
 
@@ -14,6 +14,7 @@ public:
     PhysicalAddress &operator=(const PhysicalAddress &) = default;
     ~PhysicalAddress() = default;
     [[nodiscard]] PhysicalPtr get() const {return m_addr;}
+    [[nodiscard]] void* as_ptr() const {return (void*) m_addr;};
     [[nodiscard]] bool operator==(PhysicalAddress other) const {
         return m_addr == other.m_addr;
     }
@@ -31,6 +32,9 @@ public:
     }
     [[nodiscard]] bool operator>=(PhysicalAddress other) const {
         return m_addr >= other.m_addr;
+    }
+    [[nodiscard]] PhysicalAddress operator+(u32 other) {
+        return PhysicalAddress(m_addr + other);
     }
 
 private:

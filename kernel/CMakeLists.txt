@@ -21,8 +21,9 @@ include_directories("arch/${HOSTARCH}")
 
 # Add architecture-specific source files
 file(GLOB ARCH_SOURCES "arch/${HOSTARCH}/*.c" "arch/${HOSTARCH}/*.cpp" "arch/${HOSTARCH}/*.S")
+file(GLOB MEMORY_SOURCES "kernel/Memory/*.cpp")
 
-set(KERNEL_SOURCES kernel/kernel.cpp kernel/Memory/Heap.cpp)
+set(KERNEL_SOURCES kernel/kernel.cpp ${MEMORY_SOURCES})
 
 # Combine all source files
 set(SOURCES ${ARCH_SOURCES} ${KERNEL_SOURCES})
@@ -48,14 +49,14 @@ add_custom_target(install_kernel_binary
     VERBATIM
 )
 add_dependencies(create_isodir install_kernel_binary)
-file(GLOB_RECURSE KERNEL_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
+file(GLOB_RECURSE KERNEL_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include" CONFIGURE_DEPENDS "*.h")
 foreach(RELATIVE_HEADER_PATH IN LISTS KERNEL_HEADERS)
     add_custom_command(
         TARGET install_kernel_headers
         DEPENDS "${RELATIVE_HEADER_PATH}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${INCLUDEDIR}/kernel"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different  "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${INCLUDEDIR}/kernel"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different  "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${INCLUDEDIR}/${RELATIVE_HEADER_PATH}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include"
         VERBATIM
     )
 endforeach()

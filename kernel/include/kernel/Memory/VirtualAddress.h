@@ -6,7 +6,7 @@ constexpr u32 PD_OFFSET_BITS = 22;
 
 class VirtualAddress {
 public:
-    VirtualAddress() = default;
+    VirtualAddress(void* vaddr) : m_vaddr((uintptr_t) vaddr) {}
     VirtualAddress(VirtualAddress &&) = default;
     VirtualAddress(const VirtualAddress &) = default;
     VirtualAddress &operator=(VirtualAddress &&) = default;

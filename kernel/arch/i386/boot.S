@@ -101,7 +101,7 @@ test_a20:
 	loop 1b
 
 3:
-	mov $(next_free_page -0xc0000000), %edi
+	//mov $(next_free_page -0xc0000000), %edi
 	add $0xc0000000, %esi
 	mov %esi, (%edi)
 	# Map VGA video memory to 0xC03FF000 as "present, writable".

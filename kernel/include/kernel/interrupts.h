@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <kernel/types.h>
 
 #define IDT_MAX_DESCRIPTORS 256
 

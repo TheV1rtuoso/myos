@@ -1,8 +1,7 @@
 #include <kernel/cpu.h>
 #include <kernel/interrupts.h>
 #include <kernel/multiboot.h>
-#include <kernel/paging.h>
-#include <kernel/Heap.h>
+#include <kernel/Memory/Heap.h>
 #include <kernel/tty.h>
 
 #include <kernel/Memory/MemoryManager.h>
@@ -26,8 +25,6 @@ int print_memory_map()
          i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t *mmmt =
             (multiboot_memory_map_t *)(multiboot_info_ptr->mmap_addr + i);
-
-        reg = MemoryRegion(mmmt->addr, mmmt->size);
         printf("Start Addr | Length | Size | Type:");
         putchar(' ');
         print_hex64(mmmt->addr);
@@ -70,33 +67,44 @@ void init_apic() {
     // TODO
 }
 
+uint8_t read_keyboard_input() {
+    uint8_t data;
+    __asm__ volatile ("inb %1, %0" : "=a" (data) : "dN" (0x60));
+    return data;
+}
+
 extern "C" void kernel_main(void)
 {
-    print_memory_map();
-    auto reg_ptr =get_usable_ram();
-    MemoryRegion region = MemoryRegion(reg_ptr->addr, reg_ptr->len);
-    auto vs = VirtualAddressSpace::from_cr3();
-    auto phy_addr = PhysicalAddressSpace(region);
-    MemoryManager mem_mgr {phy_addr, vs};
-    auto page_ptr = mem_mgr.get_pages(1024);
-    heap_init(page_ptr, 1024*4096);
-
     CurrentTTY = TTY(VGA_WIDTH, VGA_HEIGHT, (VGAEntry *)0xC03FF000);
     CurrentTTY.set_clear();
+
     idtr_init();
     enable_interrupts();
-    paging_init();
     init_apic();
     printf("Hello, kernel World!\n");
     if (multiboot_info_ptr == nullptr) {
         printf("No multiboot header found\n");
     }
     print_memory_map();
-    auto page = get_new_kernel_pages();
-    printf("Got kernel page @%p\n", page);
+
+    // init memory manager
+    auto reg_ptr =get_usable_ram();
+    MemoryRegion region = MemoryRegion(reg_ptr->addr, reg_ptr->len);
+    auto vs = VirtualAddressSpace::from_cr3();
+    auto phy_addr = PhysicalAddressSpace(region);
+    auto mem_mgr =  MemoryManager(phy_addr, vs);
+    auto page_ptr = mem_mgr.get_pages(1024, PTE_P | PTE_RW);
+
+    heap_init(page_ptr, 1024*4096);
+
     auto p = new int[64];
     auto p2 = new int[32];
     printf("Allocated array @%p\n", p);
     printf("Allocated array2 @%p\n", p2);
     printf("kernel_main end\n");
+    while (1)
+    {
+        read_keyboard_input();
+    }
+
 }

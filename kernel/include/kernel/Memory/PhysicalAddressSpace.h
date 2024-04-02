@@ -1,11 +1,16 @@
 #include <kernel/types.h>
+#include <kernel/Memory/Heap.h>
+#include <kernel/Memory/MemoryRegion.h>
 
 class MemoryRegion;
+class PhysicalAddress;
+
+constexpr u32 RESERVED_MEMORY = 0x4000000;
 
 class PhysicalAddressSpace
 {
 public:
-    PhysicalAddressSpace(const MemoryRegion&);
+    PhysicalAddressSpace(MemoryRegion);
     PhysicalAddressSpace(PhysicalAddressSpace &&) = default;
     PhysicalAddressSpace(const PhysicalAddressSpace &) = default;
     PhysicalAddressSpace &operator=(PhysicalAddressSpace &&) = default;
@@ -14,6 +19,6 @@ public:
     PhysicalAddress get_physical_pages(size_t n);
 
 private:
-    const MemoryRegion& m_region;
-
+    MemoryRegion m_region;
+    WatermarkAllocator m_allocator;
 };

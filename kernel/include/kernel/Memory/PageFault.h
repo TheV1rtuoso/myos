@@ -1,13 +1,11 @@
 #pragma once
 
-#include <stdint.h>
+#include <kernel/types.h>
 
 class PageFaultError {
 
 public:
-    PageFaultError(uint32_t error_code) : m_error_code(error_code)
-    {
-    }
+    PageFaultError(u32 error_code) : m_error_code(error_code) {}
     [[nodiscard]] bool p() const noexcept
     {
         return bool(m_error_code & 1);
@@ -43,7 +41,7 @@ public:
     }
 
 private:
-    uint32_t m_error_code;
+    u32 m_error_code;
 };
 
 static_assert(sizeof(PageFaultError) == 4, "PageFaultError is not 32 bits");
