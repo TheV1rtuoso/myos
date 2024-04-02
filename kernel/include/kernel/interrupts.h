@@ -57,13 +57,7 @@ enum class InterruptVector : uint8_t {
     // Reserved = 0x1F
 };
 
-enum class InterruptType {
-    Fault,
-    Abort,
-    Interrupt,
-    Trap,
-    Unknown
-};
+enum class InterruptType { Fault, Abort, Interrupt, Trap, Unknown };
 
 bool is_cpu_interrupt(uint8_t vector);
 const char *interrupt_type_to_string(InterruptType type);
@@ -72,7 +66,6 @@ InterruptType get_interrupt_type(InterruptVector vec);
 const char *get_interrupt_name(InterruptVector vec);
 
 typedef void interrupt_handler_t(InterruptFrame *frame);
-
 
 
 void idt_set_descriptor(uint8_t vector, void *isr, uint8_t flags);
@@ -94,6 +87,7 @@ typedef struct {
 
 void idtr_init(void);
 
+void disable_nmi();
 
 extern "C" void exception_handler(
     InterruptFrame); // TODO check __attribute__((noreturn))

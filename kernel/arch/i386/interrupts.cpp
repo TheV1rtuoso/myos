@@ -1,5 +1,6 @@
 #include <kernel/Memory/PageFault.h>
 #include <kernel/interrupts.h>
+#include <kernel/io.h>
 #include <kernel/panic.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +38,12 @@ void idtr_init(void)
     __asm__ volatile("lidt %0" : : "m"(idtr)); // load the new IDT
 }
 
+void disable_nmi()
+{
+    outb(0x70, inb(0x70) & 0x7F);
+}
+
+
 static size_t interrupt_counter = 0;
 
 void exception_handler(InterruptFrame intr_frame)
@@ -46,7 +53,8 @@ void exception_handler(InterruptFrame intr_frame)
     auto interrupt = static_cast<InterruptVector>(intr_frame.vector_no);
     printf("CPU Interrupt %x, Reason: %s @rip: %p\n",
            intr_frame.vector_no,
-           get_interrupt_name(interrupt), intr_frame.eip);
+           get_interrupt_name(interrupt),
+           intr_frame.eip);
 
     if (!is_cpu_interrupt(intr_frame.vector_no)) {
         return;
@@ -66,143 +74,143 @@ void exception_handler(InterruptFrame intr_frame)
     default: {
         auto type = get_interrupt_type(interrupt);
         if (type == InterruptType::Fault || type == InterruptType::Abort) {
-          // stop_cpu();
+            // stop_cpu();
         }
     }
     }
 }
 
-    void enable_interrupts(void)
-    {
-        __asm__ volatile("sti");
-        is_interrupt_enabled = 1; // TODO check if error occurs
+void enable_interrupts(void)
+{
+    __asm__ volatile("sti");
+    is_interrupt_enabled = 1; // TODO check if error occurs
+}
+void disable_interrupts(void)
+{
+    __asm__ volatile("cli");
+    is_interrupt_enabled = 0; // TODO check if error occurs
+}
+
+uint32_t interrupt_enabled(void)
+{
+    return is_interrupt_enabled;
+}
+
+
+bool is_cpu_interrupt(uint8_t vector)
+{
+    return vector < 0x20;
+}
+
+
+const char *interrupt_type_to_string(InterruptType type)
+{
+    switch (type) {
+    case InterruptType::Fault:
+        return "Fault";
+    case InterruptType::Abort:
+        return "Abort";
+    case InterruptType::Interrupt:
+        return "Interrupt";
+    case InterruptType::Trap:
+        return "Trap";
+    default:
+        return "Unknown";
     }
-    void disable_interrupts(void)
-    {
-        __asm__ volatile("cli");
-        is_interrupt_enabled = 0; // TODO check if error occurs
+}
+
+InterruptType get_interrupt_type(InterruptVector vec)
+{
+    switch (vec) {
+    case InterruptVector::DivisionError:
+    case InterruptVector::BoundRangeExceeded:
+    case InterruptVector::InvalidOpcode:
+    case InterruptVector::DeviceNotAvailable:
+    case InterruptVector::CoprocessorSegmentOverrun:
+    case InterruptVector::InvalidTSS:
+    case InterruptVector::SegmentNotPresent:
+    case InterruptVector::StackSegmentFault:
+    case InterruptVector::GeneralProtectionFault:
+    case InterruptVector::PageFault:
+    case InterruptVector::x87FloatingPointException:
+    case InterruptVector::AlignmentCheck:
+    case InterruptVector::VirtualizationException:
+    case InterruptVector::ControlProtectionException:
+    case InterruptVector::HypervisorInjectionException:
+    case InterruptVector::VMMCommunicationException:
+    case InterruptVector::SecurityException:
+        return InterruptType::Fault;
+
+    case InterruptVector::DoubleFault:
+    case InterruptVector::MachineCheck:
+        return InterruptType::Abort;
+
+    case InterruptVector::NonMaskableInterrupt:
+        return InterruptType::Interrupt;
+
+    case InterruptVector::Debug:
+    case InterruptVector::Breakpoint:
+    case InterruptVector::Overflow:
+        return InterruptType::Trap;
+
+    default:
+        return InterruptType::Unknown;
     }
+}
 
-    uint32_t interrupt_enabled(void)
-    {
-        return is_interrupt_enabled;
+
+const char *get_interrupt_name(InterruptVector vec)
+{
+    switch (vec) {
+    case InterruptVector::DivisionError:
+        return "Division Error";
+    case InterruptVector::Debug:
+        return "Debug";
+    case InterruptVector::NonMaskableInterrupt:
+        return "Non-maskable Interrupt";
+    case InterruptVector::Breakpoint:
+        return "Breakpoint";
+    case InterruptVector::Overflow:
+        return "Overflow";
+    case InterruptVector::BoundRangeExceeded:
+        return "Bound Range Exceeded";
+    case InterruptVector::InvalidOpcode:
+        return "Invalid Opcode";
+    case InterruptVector::DeviceNotAvailable:
+        return "Device Not Available";
+    case InterruptVector::DoubleFault:
+        return "Double Fault";
+    case InterruptVector::CoprocessorSegmentOverrun:
+        return "Coprocessor Segment Overrun";
+    case InterruptVector::InvalidTSS:
+        return "Invalid TSS";
+    case InterruptVector::SegmentNotPresent:
+        return "Segment Not Present";
+    case InterruptVector::StackSegmentFault:
+        return "Stack-Segment Fault";
+    case InterruptVector::GeneralProtectionFault:
+        return "General Protection Fault";
+    case InterruptVector::PageFault:
+        return "Page Fault";
+    case InterruptVector::x87FloatingPointException:
+        return "x87 Floating-Point Exception";
+    case InterruptVector::AlignmentCheck:
+        return "Alignment Check";
+    case InterruptVector::MachineCheck:
+        return "Machine Check";
+    case InterruptVector::SIMDFloatingPointException:
+        return "SIMD Floating-Point Exception";
+    case InterruptVector::VirtualizationException:
+        return "Virtualization Exception";
+    case InterruptVector::ControlProtectionException:
+        return "Control Protection Exception";
+    case InterruptVector::HypervisorInjectionException:
+        return "Hypervisor Injection Exception";
+    case InterruptVector::VMMCommunicationException:
+        return "VMM Communication Exception";
+    case InterruptVector::SecurityException:
+        return "Security Exception";
+    default:
+        return "Unknown";
     }
-
-
-    bool is_cpu_interrupt(uint8_t vector)
-    {
-        return vector < 0x20;
-    }
-
-
-    const char *interrupt_type_to_string(InterruptType type)
-    {
-        switch (type) {
-        case InterruptType::Fault:
-            return "Fault";
-        case InterruptType::Abort:
-            return "Abort";
-        case InterruptType::Interrupt:
-            return "Interrupt";
-        case InterruptType::Trap:
-            return "Trap";
-        default:
-            return "Unknown";
-        }
-    }
-
-    InterruptType get_interrupt_type(InterruptVector vec)
-    {
-        switch (vec) {
-        case InterruptVector::DivisionError:
-        case InterruptVector::BoundRangeExceeded:
-        case InterruptVector::InvalidOpcode:
-        case InterruptVector::DeviceNotAvailable:
-        case InterruptVector::CoprocessorSegmentOverrun:
-        case InterruptVector::InvalidTSS:
-        case InterruptVector::SegmentNotPresent:
-        case InterruptVector::StackSegmentFault:
-        case InterruptVector::GeneralProtectionFault:
-        case InterruptVector::PageFault:
-        case InterruptVector::x87FloatingPointException:
-        case InterruptVector::AlignmentCheck:
-        case InterruptVector::VirtualizationException:
-        case InterruptVector::ControlProtectionException:
-        case InterruptVector::HypervisorInjectionException:
-        case InterruptVector::VMMCommunicationException:
-        case InterruptVector::SecurityException:
-            return InterruptType::Fault;
-
-        case InterruptVector::DoubleFault:
-        case InterruptVector::MachineCheck:
-            return InterruptType::Abort;
-
-        case InterruptVector::NonMaskableInterrupt:
-            return InterruptType::Interrupt;
-
-        case InterruptVector::Debug:
-        case InterruptVector::Breakpoint:
-        case InterruptVector::Overflow:
-            return InterruptType::Trap;
-
-        default:
-            return InterruptType::Unknown;
-        }
-    }
-
-
-    const char *get_interrupt_name(InterruptVector vec)
-    {
-        switch (vec) {
-        case InterruptVector::DivisionError:
-            return "Division Error";
-        case InterruptVector::Debug:
-            return "Debug";
-        case InterruptVector::NonMaskableInterrupt:
-            return "Non-maskable Interrupt";
-        case InterruptVector::Breakpoint:
-            return "Breakpoint";
-        case InterruptVector::Overflow:
-            return "Overflow";
-        case InterruptVector::BoundRangeExceeded:
-            return "Bound Range Exceeded";
-        case InterruptVector::InvalidOpcode:
-            return "Invalid Opcode";
-        case InterruptVector::DeviceNotAvailable:
-            return "Device Not Available";
-        case InterruptVector::DoubleFault:
-            return "Double Fault";
-        case InterruptVector::CoprocessorSegmentOverrun:
-            return "Coprocessor Segment Overrun";
-        case InterruptVector::InvalidTSS:
-            return "Invalid TSS";
-        case InterruptVector::SegmentNotPresent:
-            return "Segment Not Present";
-        case InterruptVector::StackSegmentFault:
-            return "Stack-Segment Fault";
-        case InterruptVector::GeneralProtectionFault:
-            return "General Protection Fault";
-        case InterruptVector::PageFault:
-            return "Page Fault";
-        case InterruptVector::x87FloatingPointException:
-            return "x87 Floating-Point Exception";
-        case InterruptVector::AlignmentCheck:
-            return "Alignment Check";
-        case InterruptVector::MachineCheck:
-            return "Machine Check";
-        case InterruptVector::SIMDFloatingPointException:
-            return "SIMD Floating-Point Exception";
-        case InterruptVector::VirtualizationException:
-            return "Virtualization Exception";
-        case InterruptVector::ControlProtectionException:
-            return "Control Protection Exception";
-        case InterruptVector::HypervisorInjectionException:
-            return "Hypervisor Injection Exception";
-        case InterruptVector::VMMCommunicationException:
-            return "VMM Communication Exception";
-        case InterruptVector::SecurityException:
-            return "Security Exception";
-        default:
-            return "Unknown";
-        }
-    }
+}

@@ -83,7 +83,7 @@ add_custom_target(run-bochs
 
 add_custom_target(debug-kernel-qemu
   DEPENDS myos.kernel
-  COMMAND qemu-system-i386 -s -S -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
+  COMMAND qemu-system-i386 -s -S -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel" & gdb kernel/myos.kernel
   COMMENT "Debug kernel binary in qemu with -kernel"
 )
 
