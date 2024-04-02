@@ -12,12 +12,8 @@ foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
     get_filename_component(directory ${RELATIVE_HEADER_PATH} DIRECTORY)
     string(REPLACE "../" "" subdirectory "${directory}")
     add_custom_command(
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${PREFIX}/${subdirectory}"
-        OUTPUT "${SYSROOT}/${PREFIX}/${subdirectory}"
-        VERBATIM
-    )
-    add_custom_command(
         TARGET install_lib_headers
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${SYSROOT}/${PREFIX}/${subdirectory}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${SYSROOT}/${PREFIX}/${subdirectory}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         DEPENDS "${RELATIVE_HEADER_PATH}"

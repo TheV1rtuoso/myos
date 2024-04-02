@@ -177,6 +177,12 @@ int printf(const char *__restrict format, ...)
             written += print_hex32(xint);
             break;
         }
+        case 'p': {
+            format++;
+            void* ptr = va_arg(parameters, void*);
+            written += print_hex32((uint32_t)ptr);
+            break;
+        }
         case 'd': {
             format++;
             uint32_t xint = va_arg(parameters, unsigned int);

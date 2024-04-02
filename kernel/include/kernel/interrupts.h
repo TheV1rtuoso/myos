@@ -25,6 +25,7 @@ public:
     uint32_t esp;
     uint16_t ss : 16;
 };
+static_assert(sizeof(InterruptFrame) == 64);
 
 enum class InterruptVector : uint8_t {
     DivisionError = 0x0,
@@ -60,7 +61,7 @@ enum class InterruptType {
     Fault,
     Abort,
     Interrupt,
-    Trap, 
+    Trap,
     Unknown
 };
 

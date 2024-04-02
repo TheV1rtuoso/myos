@@ -20,10 +20,11 @@ jmp handle_exception
 .long isr_stub\i
 .endm
 
+
 .text
 handle_exception:
 pusha
-lea 48(%esp), %ebp # size of call
+lea 64(%esp), %ebp # size of call
 .global exception_handler
 call exception_handler
 popa

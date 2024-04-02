@@ -22,7 +22,7 @@
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
-
+.global boot_page_directory
 # Reserve a stack for the initial thread.
 .section .bss, "aw"
 .align 4096
@@ -36,6 +36,7 @@ stack_bottom:
 stack_top:
 
 .extern multiboot_info_ptr
+.extern next_free_page
 .type multiboot_info_ptr, @object
 #.extern boot_page_directory
 
@@ -100,6 +101,9 @@ test_a20:
 	loop 1b
 
 3:
+	mov $(next_free_page -0xc0000000), %edi
+	add $0xc0000000, %esi
+	mov %esi, (%edi)
 	# Map VGA video memory to 0xC03FF000 as "present, writable".
 	movl $(0x000B8000 | 0x003), boot_page_table1 - 0xC0000000 + 1023 * 4
 

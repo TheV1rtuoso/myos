@@ -14,3 +14,9 @@ high level interrupts
 Add funny pseudo userspace program
 Add malloc / automatic pt allocation
 push segments for priv change in interrupts
+
+
+PhysicalSpace -> get_phy_pages(size_t)
+VirtualSpace -> map_pages(phy_page*)
+
+init_heap -> WaterMark(get_phypages) Stub (for free)
