@@ -43,17 +43,20 @@ void exception_handler(InterruptFrame intr_frame)
 {
     interrupt_counter++;
 
-    if (!is_cpu_interrupt(intr_frame.vector_no)) {
-        printf("CPU Exception %x, Reason: %s @rip: %p\n",
-               intr_frame.vector_no,
-               get_interrupt_name(static_cast<InterruptVector>(intr_frame.vector_no)),
-               intr_frame.eip);
-        return;
-    }
     auto interrupt = static_cast<InterruptVector>(intr_frame.vector_no);
-    printf("CPU Interrupt %x, Reason: %s @rip: %p\n ",
+    printf("CPU Interrupt %x, Reason: %s @rip: %p\n",
            intr_frame.vector_no,
            get_interrupt_name(interrupt), intr_frame.eip);
+
+    if (!is_cpu_interrupt(intr_frame.vector_no)) {
+        return;
+    }
+
+    if (get_interrupt_type(interrupt) == InterruptType::Abort) {
+        printf("Abort, stoping CPU!\n");
+        stop_cpu();
+    }
+
     switch (interrupt) {
     case InterruptVector::PageFault: {
         printf("Page fault\n");
