@@ -1,7 +1,7 @@
-#include <string.h>
-#include <stdint.h>
-#include <stddef.h>
 #include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 void *memset(void *bufptr, int value, size_t size)
 {

@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-bool test_printf() {
+bool test_printf()
+{
     // Test 1: Simple String Test
     printf("Hello, World!\n");
 
@@ -23,7 +24,9 @@ bool test_printf() {
     printf("Just a test\n");
 
     // Test 8: Long String Test
-    printf("%s\n", "This is a very long string that should still be printed correctly.");
+    printf(
+        "%s\n",
+        "This is a very long string that should still be printed correctly.");
 
     // Test 9: Boundary Test for Hexadecimal
     printf("Max unsigned int in hex: %x\n", UINT_MAX);

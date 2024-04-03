@@ -179,7 +179,7 @@ int printf(const char *__restrict format, ...)
         }
         case 'p': {
             format++;
-            void* ptr = va_arg(parameters, void*);
+            void *ptr = va_arg(parameters, void *);
             written += print_hex32((uint32_t)ptr);
             break;
         }

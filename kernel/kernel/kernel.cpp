@@ -100,16 +100,12 @@ extern "C" void kernel_main(void)
     printf("Allocated array @%p\n", p);
     printf("Allocated array2 @%p\n", p2);
     printf("kernel_main end\n");
-    PS_2Keyboard keyboard ;
+    PS_2Keyboard keyboard;
 
-    while (1)
-    {
-        if (keyboard.is_ready())
-        {
+    while (1) {
+        if (keyboard.is_ready()) {
             auto key = keyboard.read_keyboard_input();
             printf("%c", key);
         }
     }
-
-
 }

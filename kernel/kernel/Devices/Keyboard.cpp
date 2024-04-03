@@ -4,7 +4,8 @@
 
 using Keymap = PS2Key_DE;
 
-bool PS_2Keyboard::is_ready() {
+bool PS_2Keyboard::is_ready()
+{
     return STATUS_READY_BIT & read_status();
 }
 
