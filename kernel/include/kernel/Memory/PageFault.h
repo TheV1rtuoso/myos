@@ -5,7 +5,9 @@
 class PageFaultError {
 
 public:
-    PageFaultError(u32 error_code) : m_error_code(error_code) {}
+    PageFaultError(u32 error_code) : m_error_code(error_code)
+    {
+    }
     [[nodiscard]] bool p() const noexcept
     {
         return bool(m_error_code & 1);

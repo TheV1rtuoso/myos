@@ -1,11 +1,15 @@
-#include <kernel/Memory/VirtualAddressSpace.h>
-#include <kernel/Memory/PhysicalAddressSpace.h>
-#include <kernel/Memory/PhysicalAddress.h>
-#include <kernel/Memory/VirtualAddress.h>
 #include <kernel/Memory/MemoryManager.h>
+#include <kernel/Memory/PhysicalAddress.h>
+#include <kernel/Memory/PhysicalAddressSpace.h>
+#include <kernel/Memory/VirtualAddress.h>
+#include <kernel/Memory/VirtualAddressSpace.h>
 #include <stdio.h>
 
-void MemoryManager::mmap(VirtualAddress vaddr, PhysicalAddress phyaddr, size_t n, u16 flags){
+void MemoryManager::mmap(VirtualAddress vaddr,
+                         PhysicalAddress phyaddr,
+                         size_t n,
+                         u16 flags)
+{
     m_virt_space.mmap(vaddr, phyaddr, n, flags);
 }
 

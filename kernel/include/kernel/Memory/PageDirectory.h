@@ -16,30 +16,34 @@ constexpr u32 PDE_PAT = 0x1 << 12; // PDE Page-Attribute-Table
 
 class PageDirectoryEntry {
 public:
-PageDirectoryEntry(PhysicalAddress page_table_addr, u16 flags) : m_pde(page_table_addr.get() | flags) {};
-PageTable* page_table_addr() {
-    return reinterpret_cast<PageTable*>(m_pde & 0xfffff << 12);
-}
-bool check_flag(u16 flag) {
-    //TODO check max flag value
-    return flag & m_pde;
-}
-bool mask(u16 flag) {
-    //TODO check max flag value
-    m_pde = flag | m_pde;
-}
+    PageDirectoryEntry(PhysicalAddress page_table_addr, u16 flags)
+        : m_pde(page_table_addr.get() | flags){};
+    PageTable *page_table_addr()
+    {
+        return reinterpret_cast<PageTable *>(m_pde & 0xfffff << 12);
+    }
+    bool check_flag(u16 flag)
+    {
+        //TODO check max flag value
+        return flag & m_pde;
+    }
+    bool mask(u16 flag)
+    {
+        //TODO check max flag value
+        m_pde = flag | m_pde;
+    }
 
-bool set_flag(u16 flag) {
-    //TODO check max flag value
-    return flag | (m_pde & 0xfffff << 12);
-}
+    bool set_flag(u16 flag)
+    {
+        //TODO check max flag value
+        return flag | (m_pde & 0xfffff << 12);
+    }
 
 private:
-u32 m_pde;
+    u32 m_pde;
 };
 
-class PageDirectory
-{
+class PageDirectory {
 public:
     PageDirectory() = default;
     PageDirectory(PageDirectory &&) = default;
@@ -48,16 +52,19 @@ public:
     PageDirectory &operator=(const PageDirectory &) = default;
     ~PageDirectory() = default;
 
-    PageDirectoryEntry& get(u32 idx) {
+    PageDirectoryEntry &get(u32 idx)
+    {
         return m_pd[idx];
     }
-    PageDirectoryEntry& operator[](u32 idx) {
+    PageDirectoryEntry &operator[](u32 idx)
+    {
         return m_pd[idx];
     }
-    const PageDirectoryEntry& operator[](u32 idx) const {
+    const PageDirectoryEntry &operator[](u32 idx) const
+    {
         return m_pd[idx];
     }
 
 private:
-    PageDirectoryEntry m_pd [NUM_PTE];
+    PageDirectoryEntry m_pd[NUM_PTE];
 };

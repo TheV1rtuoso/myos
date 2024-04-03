@@ -1,14 +1,17 @@
+#include <kernel/Memory/Heap.h>
 #include <kernel/cpu.h>
 #include <kernel/interrupts.h>
 #include <kernel/multiboot.h>
-#include <kernel/Memory/Heap.h>
 #include <kernel/tty.h>
 
+#include <kernel/Devices/Keyboad.h>
 #include <kernel/Memory/MemoryManager.h>
 #include <kernel/Memory/MemoryRegion.h>
-#include <kernel/Memory/VirtualAddressSpace.h>
 #include <kernel/Memory/PhysicalAddressSpace.h>
-
+#include <kernel/Memory/VirtualAddressSpace.h>
+#include <kernel/eflag.h>
+#include <kernel/io.h>
+#include <kernel/panic.h>
 #include <stdio.h>
 
 multiboot_info_t *multiboot_info_ptr = nullptr;
@@ -48,17 +51,20 @@ int print_memory_map()
     return 0;
 }
 
-multiboot_memory_map_t* get_usable_ram() {
-        for (unsigned int i = 0; i < multiboot_info_ptr->mmap_length;
+multiboot_memory_map_t *get_usable_ram()
+{
+    for (unsigned int i = 0; i < multiboot_info_ptr->mmap_length;
          i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t *mmmt =
             (multiboot_memory_map_t *)(multiboot_info_ptr->mmap_addr + i);
-        if (mmmt->type == 1) return mmmt;
-        }
-        return nullptr;
+        if (mmmt->type == 1)
+            return mmmt;
+    }
+    return nullptr;
 }
 
-void init_apic() {
+void init_apic()
+{
     if (cpuid_apic()) {
         printf("CPU has APIC\n");
     } else {
@@ -67,19 +73,13 @@ void init_apic() {
     // TODO
 }
 
-uint8_t read_keyboard_input() {
-    uint8_t data;
-    __asm__ volatile ("inb %1, %0" : "=a" (data) : "dN" (0x60));
-    return data;
-}
 
 extern "C" void kernel_main(void)
 {
     CurrentTTY = TTY(VGA_WIDTH, VGA_HEIGHT, (VGAEntry *)0xC03FF000);
     CurrentTTY.set_clear();
-
     idtr_init();
-    enable_interrupts();
+    disable_nmi();
     init_apic();
     printf("Hello, kernel World!\n");
     if (multiboot_info_ptr == nullptr) {
@@ -88,23 +88,28 @@ extern "C" void kernel_main(void)
     print_memory_map();
 
     // init memory manager
-    auto reg_ptr =get_usable_ram();
+    auto reg_ptr = get_usable_ram();
     MemoryRegion region = MemoryRegion(reg_ptr->addr, reg_ptr->len);
     auto vs = VirtualAddressSpace::from_cr3();
     auto phy_addr = PhysicalAddressSpace(region);
-    auto mem_mgr =  MemoryManager(phy_addr, vs);
+    auto mem_mgr = MemoryManager(phy_addr, vs);
     auto page_ptr = mem_mgr.get_pages(1024, PTE_P | PTE_RW);
-
-    heap_init(page_ptr, 1024*4096);
-
+    heap_init(page_ptr, 1024 * 4096);
     auto p = new int[64];
     auto p2 = new int[32];
     printf("Allocated array @%p\n", p);
     printf("Allocated array2 @%p\n", p2);
     printf("kernel_main end\n");
+    PS_2Keyboard keyboard ;
+
     while (1)
     {
-        read_keyboard_input();
+        if (keyboard.is_ready())
+        {
+            auto key = keyboard.read_keyboard_input();
+            printf("%c", key);
+        }
     }
+
 
 }

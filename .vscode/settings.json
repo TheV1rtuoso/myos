@@ -19,6 +19,7 @@
     "explorer.confirmDelete": false,
     "explorer.copyRelativePathSeparator": "/",
     "files.autoSave": "onFocusChange",
+    "cpplint.cpplintPath": "/usr/bin/cpplint",
     "files.exclude": {
         "node_modules/**/*": true,
         "**/.classpath": true,
@@ -30,7 +31,9 @@
         ".clang*": "yaml",
         "*.hpp.in": "cpp",
         "*.in": "cpp",
-        "tty.h": "c"
+        "tty.h": "c",
+        "*.tcc": "cpp",
+        "span": "cpp"
     },
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
@@ -138,7 +141,7 @@
     },
     "[cpp]": {
         "editor.formatOnSave": false,
-        "editor.defaultFormatter": "xaver.clang-format"
+        "editor.defaultFormatter": "ms-vscode.cpptools"
     },
     "[cuda-cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"

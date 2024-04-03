@@ -1,14 +1,13 @@
-#include <kernel/types.h>
 #include <kernel/Memory/Heap.h>
 #include <kernel/Memory/MemoryRegion.h>
+#include <kernel/types.h>
 
 class MemoryRegion;
 class PhysicalAddress;
 
 constexpr u32 RESERVED_MEMORY = 0x4000000;
 
-class PhysicalAddressSpace
-{
+class PhysicalAddressSpace {
 public:
     PhysicalAddressSpace(MemoryRegion);
     PhysicalAddressSpace(PhysicalAddressSpace &&) = default;

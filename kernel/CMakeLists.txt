@@ -22,8 +22,9 @@ include_directories("arch/${HOSTARCH}")
 # Add architecture-specific source files
 file(GLOB ARCH_SOURCES "arch/${HOSTARCH}/*.c" "arch/${HOSTARCH}/*.cpp" "arch/${HOSTARCH}/*.S")
 file(GLOB MEMORY_SOURCES "kernel/Memory/*.cpp")
+file(GLOB DEVICE_SOURCES "kernel/Devices/*.cpp")
 
-set(KERNEL_SOURCES kernel/kernel.cpp ${MEMORY_SOURCES})
+set(KERNEL_SOURCES kernel/kernel.cpp ${MEMORY_SOURCES} ${DEVICE_SOURCES})
 
 # Combine all source files
 set(SOURCES ${ARCH_SOURCES} ${KERNEL_SOURCES})

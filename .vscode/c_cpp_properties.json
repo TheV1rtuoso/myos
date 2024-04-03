@@ -9,12 +9,13 @@
             ],
             "defines": [],
             "compilerPath": "/usr/bin/i686-elf-g++",
-            "intelliSenseMode": "linux-gcc-x86",
+            "intelliSenseMode": "gcc-i686",
             "compilerArgs": [
                 "--sysroot=/home/neo/Projects/myos/sysroot",
                 "-isystem=/usr/include",
                 "-D__is_kernel",
-                "-Iinclude"
+                "-Iinclude",
+                "-m32"
             ]
         }
     ],

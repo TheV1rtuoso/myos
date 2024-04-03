@@ -55,7 +55,8 @@ void TTY::shift_screen_up(uint32_t delta)
 void TTY::newline(void)
 {
     if (m_terminal_row + 1 == VGA_HEIGHT) {
-        shift_screen_up(1);
+        m_terminal_row = 0;
+        //shift_screen_up(1);
     } else {
         m_terminal_row++;
     }
