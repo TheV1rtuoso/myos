@@ -1,22 +1,17 @@
-Add highlevel paging support, Add translation functions for pt
-unmap initialized page tables setup memeory management
-TODO serial printf
-smart pointer impl -> VGA Memory Access (stdout wrapper)
-!! printlibrary
-!! libc setup
-! cleanup and improve cmake setup / fix iso
-assert
-nicer abort: libc to see if kernel or userspace aborted: abort()
-cpuinfo
-Add keyboard driver
-Add blinking cursor
-high level interrupts
-Add funny pseudo userspace program
-Add malloc / automatic pt allocation
-push segments for priv change in interrupts
+Processes: ecexve, fork
 
+Device: stadarized Device Driver
+Device: Serial printf
+Device: cpuinfo
+Device: Add blinking cursor
 
-PhysicalSpace -> get_phy_pages(size_t)
-VirtualSpace -> map_pages(phy_page*)
+MM: unmap unnecessary kernel functions
+MM: make sure to map additional space for 
+MM: Better Allocator (Buddy)
 
-init_heap -> WaterMark(get_phypages) Stub (for free)
+lib: smart pointer impl -> VGA Memory Access (stdout wrapper)
+lib: libc setup
+lib: nicer abort: libc to see if kernel or userspace aborted: abort()
+
+Interrupts: high level interrupts
+Interrupts: push segments for priv change in interrupts

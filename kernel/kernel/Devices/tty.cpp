@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <kernel/tty.h>
+#include <kernel/Devices/tty.h>
 #include <kernel/vga.h>
 #include <span.h>
 
@@ -92,4 +92,22 @@ void TTY::writestring(const char *data)
 void TTY::set_color(VGAColorEntry color)
 {
     m_terminal_color = color;
+}
+
+bool TTY::backspace()
+{
+    if (m_terminal_column == 0) {
+        if (m_terminal_row != 0) {
+            m_terminal_row--;
+            m_terminal_column = VGA_WIDTH - 1;
+        } else {
+            return false;
+        }
+    } else {
+        m_terminal_column--;
+    }
+    putentryat(VGAEntry(' ', m_terminal_color),
+               m_terminal_column,
+               m_terminal_row);
+    return true;
 }

@@ -1,9 +1,11 @@
+#include <kernel/Devices/tty.h>
 #include <kernel/Memory/Heap.h>
+#include <kernel/Shell.h>
 #include <kernel/cpu.h>
 #include <kernel/interrupts.h>
 #include <kernel/multiboot.h>
-#include <kernel/tty.h>
 
+#include <assert.h>
 #include <kernel/Devices/Keyboad.h>
 #include <kernel/Memory/MemoryManager.h>
 #include <kernel/Memory/MemoryRegion.h>
@@ -13,6 +15,7 @@
 #include <kernel/io.h>
 #include <kernel/panic.h>
 #include <stdio.h>
+#include <string.h>
 
 multiboot_info_t *multiboot_info_ptr = nullptr;
 VGAEntry *VGA_MEMORY = (VGAEntry *)0xC03FF000; // remapped after boot
@@ -95,17 +98,8 @@ extern "C" void kernel_main(void)
     auto mem_mgr = MemoryManager(phy_addr, vs);
     auto page_ptr = mem_mgr.get_pages(1024, PTE_P | PTE_RW);
     heap_init(page_ptr, 1024 * 4096);
-    auto p = new int[64];
-    auto p2 = new int[32];
-    printf("Allocated array @%p\n", p);
-    printf("Allocated array2 @%p\n", p2);
-    printf("kernel_main end\n");
-    PS_2Keyboard keyboard;
+    auto keyboard = new PS_2Keyboard();
 
-    while (1) {
-        if (keyboard.is_ready()) {
-            auto key = keyboard.read_keyboard_input();
-            printf("%c", key);
-        }
-    }
+    Shell shell = Shell(keyboard, &CurrentTTY);
+    shell.run();
 }

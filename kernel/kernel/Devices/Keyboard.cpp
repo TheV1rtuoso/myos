@@ -2,7 +2,7 @@
 #include <kernel/Devices/keymap.h>
 #include <stdio.h>
 
-using Keymap = PS2Key_DE;
+using Keymap = PS2KeyKeyMap1;
 
 bool PS_2Keyboard::is_ready()
 {
@@ -18,9 +18,9 @@ u8 PS_2Keyboard::read_status()
 
 u8 PS_2Keyboard::read_keyboard_input()
 {
-    u8 data;
+    uint8_t data = 0;
     __asm__ volatile("inb %1, %0" : "=a"(data) : "dN"(0x60));
-    auto key = Keymap(data);
-    printf("%x", data);
-    return PS2KeyToASCII<Keymap>(key, false);
+    u16 key = data;
+    //printf("(%x), (%x)", data, (int) Keymap(key));
+    return PS2KeyToASCII<Keymap>(static_cast<Keymap>(key), false);
 }
