@@ -18,6 +18,15 @@ TTY::TTY(const size_t width, const size_t height, VGAEntry *vga_memory)
 }
 
 
+void TTY::write_footer(const char *data)
+{
+    size_t len = strlen(data);
+    size_t start = VGA_WIDTH - 1 - len;
+    for (size_t i = 0; i < len; i++) {
+        putentryat(VGAEntry(data[i], m_terminal_color), start + i, VGA_HEIGHT - 1);
+    }
+}
+
 void TTY::fill(VGAEntry entry)
 {
     for (auto &console : m_console) {
@@ -54,7 +63,7 @@ void TTY::shift_screen_up(uint32_t delta)
 
 void TTY::newline(void)
 {
-    if (m_terminal_row + 1 == VGA_HEIGHT) {
+    if (m_terminal_row + 1 == (VGA_HEIGHT - m_footer)) {
         m_terminal_row = 0;
         //shift_screen_up(1);
     } else {

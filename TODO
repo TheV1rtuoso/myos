@@ -1,12 +1,15 @@
 Processes: ecexve, fork
+Library: Init (memory locations)
 
 Device: stadarized Device Driver
+! Device: Organize device init/storage
+! Device: Timer
 Device: Serial printf
 Device: cpuinfo
 Device: Add blinking cursor
 
 MM: unmap unnecessary kernel functions
-MM: make sure to map additional space for 
+MM: make sure to map additional space for
 MM: Better Allocator (Buddy)
 
 lib: smart pointer impl -> VGA Memory Access (stdout wrapper)

@@ -1,5 +1,6 @@
 #pragma once
 #include <kernel/vga.h>
+#include <kernel/types.h>
 #include <span.h>
 #include <stddef.h>
 
@@ -13,6 +14,11 @@ public:
     TTY &operator=(const TTY &) = default;
     ~TTY() = default;
 
+    void set_footing(u8 size)
+    {
+       m_footer = size;
+    }
+    void write_footer(const char *data);
     void fill(VGAEntry entry);
     void fill(uint8_t c);
     void putchar(int8_t c);
@@ -37,6 +43,7 @@ private:
     size_t m_terminal_row = 0;
     size_t m_terminal_column = 0;
     VGAColorEntry m_terminal_color = VGAColorEntry(GREEN, BLACK);
+    u8 m_footer = 1;
 };
 
 extern TTY CurrentTTY;
