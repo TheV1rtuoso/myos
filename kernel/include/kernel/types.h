@@ -18,6 +18,9 @@ constexpr u64 TiB = KiB * KiB * KiB * KiB;
 constexpr u64 PiB = KiB * KiB * KiB * KiB * KiB;
 constexpr u64 EiB = KiB * KiB * KiB * KiB * KiB * KiB;
 
+
+#define ALWAYS_INLINE __attribute__((always_inline))
+
 /*template<bool condition, class TrueType, class FalseType>
 struct __Conditional {
     using Type = TrueType;
