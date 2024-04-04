@@ -7,12 +7,14 @@ constexpr u32 PDE_P = 0x1 << 0;    // PDE Present
 constexpr u32 PDE_RW = 0x1 << 1;   // PDE Read/Write
 constexpr u32 PDE_US = 0x1 << 2;   // PDE USER/SUPERVISOR (S=0, U=1)
 constexpr u32 PDE_PWT = 0x1 << 3;  // PDE Page-Level Write-through
-constexpr u32 PDE_PCD = 0x1 << 4;  // PDE Cache Disable
+constexpr u32 PDE_CD = 0x1 << 4;   // PDE Cache Disable
 constexpr u32 PDE_A = 0x1 << 5;    // PDE Accessed
 constexpr u32 PDE_D = 0x1 << 6;    // PDE Dirty
 constexpr u32 PDE_PS = 0x1 << 7;   // PDE Page-Size (0=4KB, 1=4MB?)
 constexpr u32 PDE_G = 0x1 << 8;    // PDE Global
 constexpr u32 PDE_PAT = 0x1 << 12; // PDE Page-Attribute-Table
+
+constexpr u16 PD_SU = PDE_PAT | PDE_CD | PDE_PWT; // strongly uncacheable
 
 class PageDirectoryEntry {
 public:

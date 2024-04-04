@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <kernel/Memory/PhysicalAddress.h>
 #include <kernel/Memory/VirtualAddress.h>
 #include <kernel/Memory/VirtualAddressSpace.h>
@@ -64,18 +65,22 @@ void VirtualAddressSpace::mmap(VirtualAddress vaddr,
         auto pde = m_page_directory->get(pd_off);
         PageTable *pt;
         if (!pde.check_flag(PDE_P)) {
-            //printf("pt not present\n");
+            //printf("pde not present\n");
             pt = &reserved_page_table[reserved_page_table_idx++];
             //printf("Get PT VA:%p\n", pt);
             auto pt_addr = translate_to_physical_addr(VirtualAddress(pt));
             pt->clear();
+            // TODO FIXME PDE flags currently only PRESENT, problem: set flags for entire page table
+            // (Strongly uncacheable) would apply if not careful
+            // FIX why does flags & PDE_P not work?
+            assert(flags & PDE_P);
             (*m_page_directory)[pd_off] =
-                PageDirectoryEntry(pt_addr, flags | PDE_P);
+                PageDirectoryEntry(pt_addr, flags | PDE_P | PDE_RW);
         } else {
             pt = pde.page_table_addr();
         }
 
-        allocated += pt->fill(pt_off, phyaddr, flags);
+        allocated += pt->fill(pt_off, phyaddr, flags | PDE_P | PDE_RW);
         pt_off = 0;
         pd_off++;
     }

@@ -5,6 +5,18 @@
 #include <kernel/Memory/VirtualAddressSpace.h>
 #include <stdio.h>
 
+void *MemoryManager::map_physical_pages(PhysicalAddress phyaddr,
+                                        size_t n,
+                                        u16 flags)
+{
+
+    //TODO check flags and if its necessary to round up
+    auto virt_addr = m_virt_space.get_virtual_addresses(n);
+    auto actual = virt_addr.round_up_to_next_virtual_pde();
+    m_virt_space.mmap(actual, phyaddr, n, flags);
+    return actual.as_ptr();
+}
+
 void MemoryManager::mmap(VirtualAddress vaddr,
                          PhysicalAddress phyaddr,
                          size_t n,
@@ -13,7 +25,7 @@ void MemoryManager::mmap(VirtualAddress vaddr,
     m_virt_space.mmap(vaddr, phyaddr, n, flags);
 }
 
-void *MemoryManager::get_pages(size_t n, int flags)
+void *MemoryManager::get_pages(size_t n, u16 flags)
 {
     auto phy_addr = m_phy_space.get_physical_pages(n);
     auto virt_addr = m_virt_space.get_virtual_addresses(n);
