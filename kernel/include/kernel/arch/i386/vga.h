@@ -8,8 +8,7 @@ class VGAEntry;
 
 constexpr size_t VGA_WIDTH{80};
 constexpr size_t VGA_HEIGHT{25};
-
-
+#define VGA_MEMORY ((VGAEntry *)0xC03FF000) // remapped after boot
 enum VGAColor : uint8_t {
     BLACK = 0,
     BLUE = 1,

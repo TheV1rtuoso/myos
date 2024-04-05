@@ -11,15 +11,19 @@ enum KeyBoardCommand {
     Reset = 0xFF
 };
 
+class DeviceManager;
 constexpr u32 STATUS_READY_BIT = 1;
 
 class PS_2Keyboard {
+    friend class DeviceManager;
 public:
     u8 read_keyboard_input();
     u8 read_status();
     bool is_ready();
+    ~PS_2Keyboard();
 
 private:
+    PS_2Keyboard() : m_is_shift_pressed(0) {};
     //std::vector <KeyBoardCommand> command_queue;
     bool m_is_shift_pressed = 0;
 };

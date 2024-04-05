@@ -33,7 +33,11 @@
         "*.in": "cpp",
         "tty.h": "c",
         "*.tcc": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "new": "cpp",
+        "ios": "cpp",
+        "string": "cpp",
+        "ostream": "cpp"
     },
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,

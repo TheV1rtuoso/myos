@@ -1,7 +1,8 @@
 #include <assert.h>
-#include <kernel/Devices/Keyboad.h>
+#include <kernel/Devices/Keyboard.h>
 #include <kernel/Devices/TTY.h>
 #include <kernel/Shell.h>
+#include <kernel/interrupts.h>
 #include <string.h>
 
 char *Shell::prompt()
@@ -15,19 +16,19 @@ char *Shell::prompt()
             case 0:
                 break;
             case '\n':
-                CurrentTTY.newline();
+                m_tty->newline();
                 assert(i < MAX_COMMAND_SIZE);
                 buffer[i] = '\0';
                 return buffer;
             case '\b':
                 if (i > 0) {
-                    CurrentTTY.backspace();
+                    m_tty->backspace();
                     i--;
                 }
                 break;
             default:
                 if (i + 1 < MAX_COMMAND_SIZE) {
-                    CurrentTTY.putchar(key);
+                    m_tty->putchar(key);
                     buffer[i++] = key;
                 }
             }
@@ -46,7 +47,9 @@ void Shell::run()
         } else if (strncmp(buffer, "echo ", 5) == 0) {
             printf("%s\n", &buffer[5]);
         } else if (strcmp(buffer, "clear") == 0) {
-            CurrentTTY.set_clear();
+            m_tty->set_clear();
+        } else if (strcmp(buffer, "intr") == 0) {
+            printf("%d\n", interrupt_enabled());
         } else {
             printf("Unknown command: %s\n", buffer);
         }

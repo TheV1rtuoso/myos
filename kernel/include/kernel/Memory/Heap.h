@@ -3,12 +3,13 @@
 #include <stdint.h>
 
 void *operator new(size_t size) noexcept;
+void *operator new(size_t size) noexcept;
 
 
 // Correspondingly, overwrite the global operator delete
-void operator delete(void *p, size_t size) noexcept;
-
+void operator delete[](void *p) noexcept;
 void operator delete(void *p) noexcept;
+void operator delete(void *p, size_t size) noexcept;
 
 void heap_init(void *start, size_t size);
 

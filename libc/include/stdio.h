@@ -16,7 +16,7 @@ int print_decimal(int n);
 int printf(const char *__restrict, ...);
 int putchar(int);
 int puts(const char *);
-
+int snprintf(char *str, size_t size, const char *format, ...);
 #ifdef __cplusplus
 }
 #endif

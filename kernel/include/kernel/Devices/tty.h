@@ -45,5 +45,3 @@ private:
     VGAColorEntry m_terminal_color = VGAColorEntry(GREEN, BLACK);
     u8 m_footer = 1;
 };
-
-extern TTY CurrentTTY;

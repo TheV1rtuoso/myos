@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <kernel/Memory/Heap.h>
+#include <kernel/types.h>
 
+constexpr size_t MIN_SIZE = 8;
+static u32 HEAP_INIT = 0;
 
 static WatermarkAllocator wm_alloc{nullptr, 0};
 
@@ -19,6 +22,16 @@ void *WatermarkAllocator::allocate(size_t size)
     return (void *)ret;
 }
 // Operator new[]
+void *operator new(size_t size)
+{
+    assert(HEAP_INIT);
+    if (size <= MIN_SIZE) {
+        size = MIN_SIZE;
+    }
+    auto ptr = wm_alloc.allocate(size);
+    //("allocate %d bytes: %p\n", (int) size, ptr);
+    return ptr;
+}
 void *operator new[](size_t size)
 {
     // You can simply forward this to operator new for simplicity
@@ -39,10 +52,17 @@ void operator delete[](void *p, size_t size)
     operator delete(p);
 }
 
-void *operator new(size_t size) noexcept
+void operator delete(void *p)
 {
-    return wm_alloc.allocate(size);
+    (void)p;
 }
+void operator delete(void *p, size_t size)
+{
+    (void)p;
+    (void)size;
+}
+
+
 
 void heap_init(void *start, size_t size)
 {
@@ -56,17 +76,6 @@ void heap_init(void *start, size_t size)
     for (size_t i = 0; i < size / 4; ++i) {
         assert(ptr[i] == 0x0);
     }
-
     wm_alloc = {(uint8_t *)start, size};
-}
-
-// Correspondingly, overwrite noexcept;lobal operator delete
-void operator delete(void *p) noexcept
-{
-    (void)p;
-}
-void operator delete(void *p, size_t size) noexcept
-{
-    (void)p;
-    (void)size;
+    HEAP_INIT = 1;
 }

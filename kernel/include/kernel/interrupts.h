@@ -4,6 +4,8 @@
 
 #define IDT_MAX_DESCRIPTORS 256
 
+static constexpr u8 TIMER_IRV = 0x20;
+
 
 class InterruptFrame {
 public:
@@ -53,7 +55,8 @@ enum class InterruptVector : uint8_t {
     // Reserved values from 0x16 to 0x1B are skipped
     HypervisorInjectionException = 0x1C,
     VMMCommunicationException = 0x1D,
-    SecurityException = 0x1E
+    SecurityException = 0x1E,
+    TimerInterrupt = 0x20
     // Reserved = 0x1F
 };
 
@@ -94,4 +97,31 @@ extern "C" void exception_handler(
 
 void enable_interrupts(void);
 void disable_interrupts(void);
-uint32_t interrupt_enabled(void);
+bool interrupt_enabled(void);
+
+class InterrruptLock {
+public:
+    InterrruptLock() : m_enabled(interrupt_enabled())
+    {
+        acquire();
+    }
+    ~InterrruptLock()
+    {
+        release();
+    }
+    void release()
+    {
+        if (m_enabled) {
+            enable_interrupts();
+        }
+    }
+
+    void acquire()
+    {
+        m_enabled = interrupt_enabled();
+        disable_interrupts();
+    }
+
+private:
+    bool m_enabled = false;
+};

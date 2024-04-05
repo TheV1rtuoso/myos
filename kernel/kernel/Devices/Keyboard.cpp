@@ -1,4 +1,4 @@
-#include <kernel/Devices/Keyboad.h>
+#include <kernel/Devices/Keyboard.h>
 #include <kernel/Devices/keymap.h>
 #include <stdio.h>
 

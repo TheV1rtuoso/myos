@@ -1,9 +1,13 @@
+#include <kernel/Devices/DeviceManager.h>
+#include <kernel/Devices/Timer.h>
 #include <kernel/Memory/PageFault.h>
+#include <kernel/arch/i386/APIC.h>
 #include <kernel/interrupts.h>
 #include <kernel/io.h>
 #include <kernel/panic.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define ERROR_STUB_NAME(x) (isr_err_stub##x)
 
@@ -45,20 +49,17 @@ void disable_nmi()
 
 
 static size_t interrupt_counter = 0;
-
 void exception_handler(InterruptFrame intr_frame)
 {
+    auto lock = InterrruptLock();
     interrupt_counter++;
 
     auto interrupt = static_cast<InterruptVector>(intr_frame.vector_no);
+    /* TODO set to debug
     printf("CPU Interrupt %x, Reason: %s @rip: %p\n",
            intr_frame.vector_no,
            get_interrupt_name(interrupt),
-           intr_frame.eip);
-
-    if (!is_cpu_interrupt(intr_frame.vector_no)) {
-        return;
-    }
+           intr_frame.eip);*/
 
     if (get_interrupt_type(interrupt) == InterruptType::Abort) {
         printf("Abort, stoping CPU!\n");
@@ -67,8 +68,12 @@ void exception_handler(InterruptFrame intr_frame)
 
     switch (interrupt) {
     case InterruptVector::PageFault: {
-        printf("Page fault\n");
         page_fault_handler(PageFaultError(intr_frame.error_code));
+        break;
+    }
+    case InterruptVector::TimerInterrupt: {
+        APIC_EOI_RAII _eoi_raii;
+        DeviceManager::the().timer()->tick();
         break;
     }
     default: {
@@ -91,7 +96,7 @@ void disable_interrupts(void)
     is_interrupt_enabled = 0; // TODO check if error occurs
 }
 
-uint32_t interrupt_enabled(void)
+bool interrupt_enabled(void)
 {
     return is_interrupt_enabled;
 }
@@ -210,6 +215,8 @@ const char *get_interrupt_name(InterruptVector vec)
         return "VMM Communication Exception";
     case InterruptVector::SecurityException:
         return "Security Exception";
+    case InterruptVector::TimerInterrupt:
+        return "Timer Interrupt";
     default:
         return "Unknown";
     }

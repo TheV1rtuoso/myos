@@ -14,6 +14,7 @@
                 "--sysroot=/home/neo/Projects/myos/sysroot",
                 "-isystem=/usr/include",
                 "-D__is_kernel",
+                "-DCONFIG_ARCH_I386",
                 "-Iinclude",
                 "-m32"
             ]

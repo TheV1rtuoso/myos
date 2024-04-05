@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -116,6 +117,43 @@ int print_decimal(int n)
     return count + i; // Total printed characters
 }
 
+
+int _print_decimal(char *_buf, size_t size, int n)
+{
+    if (n == 0) {
+        assert(size > 2); // At least 1 byte for the null terminator
+        _buf[0] = '0';
+        _buf[1] = '\0';
+        return 1;
+    }
+
+    int count = 0;
+    if (n == INT_MIN) {
+        // Special case for INT_MIN
+        print("-2147483648", 11);
+        return 11; // Number of characters in "-2147483648"
+    } else if (n < 0) {
+        putchar('-');
+        n = -n;
+        count++;
+    }
+
+    char buf[32];
+    int i = 0;
+    while (n > 0) {
+        buf[i++] = '0' + n % 10;
+        n /= 10;
+    }
+
+    // Reverse the buffer before printing
+    int start = (i - 1 < (int)size ? i - 1 : size - 1);
+    for (int j = start; j >= 0; j--) {
+        _buf[start - j] = buf[j];
+    }
+    _buf[start + 1] = '\0';
+    return count + i; // Total printed characters
+}
+
 int32_t puts(const char *string)
 {
     uint32_t len = strlen(string);
@@ -201,4 +239,124 @@ int printf(const char *__restrict format, ...)
         }
     }
     return written;
+}
+
+#define SNPRINTF_BUF_SIZE 256
+int snprintf(char *str, size_t size, const char *format, ...)
+{
+    va_list parameters;
+    va_start(parameters, format);
+    //assert (size < (size_t) 256);
+    char buf[SNPRINTF_BUF_SIZE];
+    size_t written = 0;
+    size_t total_written = 0;
+
+    while (*format != '\0') {
+        if (total_written >= size - 1) {
+            // Buffer full, terminate string and return.
+            str[size - 1] = '\0';
+            break;
+        }
+
+        size_t maxrem = size - total_written;
+
+        if (*format != '%') {
+            if (total_written < size - 1) {
+                str[total_written++] = *format;
+                str[total_written] = '\0';
+            }
+            format++;
+            continue;
+        }
+
+        const char *format_begun_at = format++;
+
+        switch (*format) {
+        case '%':
+            if (total_written < size - 1) {
+                str[total_written++] = '%';
+                str[total_written] = '\0';
+            }
+            break;
+
+        case 'c': {
+            char c = (char)va_arg(parameters, int);
+            if (total_written < size - 1) {
+                str[total_written++] = c;
+                str[total_written] = '\0';
+            }
+            break;
+        }
+
+        case 's': {
+            const char *str_arg = va_arg(parameters, const char *);
+            size_t len = strlen(str_arg);
+            if (maxrem < len) {
+                // TODO: Set errno to EOVERFLOW.
+                return -1;
+            }
+            if (total_written < size - 1) {
+                strncpy(&str[total_written], str_arg, maxrem);
+                total_written += len;
+            }
+            break;
+        }
+
+        case 'x': {
+            uint32_t xint = va_arg(parameters, unsigned int);
+            written = snprintf(buf, SNPRINTF_BUF_SIZE, "%x", xint);
+            if (total_written + written < size) {
+                strcat(str, buf);
+                total_written += written;
+            } else {
+                // Buffer full, terminate string and return.
+                str[size - 1] = '\0';
+                return total_written;
+            }
+            break;
+        }
+
+        case 'p': {
+            void *ptr = va_arg(parameters, void *);
+            written = snprintf(buf, SNPRINTF_BUF_SIZE, "%p", ptr);
+            if (total_written + written < size) {
+                strcat(str, buf);
+                total_written += written;
+            } else {
+                // Buffer full, terminate string and return.
+                str[size - 1] = '\0';
+                return total_written;
+            }
+            break;
+        }
+
+        case 'd': {
+            uint32_t xint = va_arg(parameters, unsigned int);
+            written = _print_decimal(buf, SNPRINTF_BUF_SIZE, xint);
+            if (total_written + written < size) {
+                strcat(str, buf);
+                total_written += written;
+            } else {
+                // Buffer full, terminate string and return.
+                str[size - 1] = '\0';
+                return total_written;
+            }
+            break;
+        }
+
+        default: {
+            // Invalid format specifier, ignore and print as is.
+            if (total_written < size - 1) {
+                str[total_written++] = *format_begun_at;
+                str[total_written] = '\0';
+            }
+            break;
+        }
+        }
+
+        format++;
+    }
+
+    va_end(parameters);
+    return total_written;
 }

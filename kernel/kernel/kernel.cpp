@@ -1,24 +1,26 @@
+#include <assert.h>
+#include <kernel/Devices/Keyboard.h>
+#include <kernel/Devices/DeviceManager.h>
 #include <kernel/Devices/tty.h>
 #include <kernel/Memory/Heap.h>
-#include <kernel/Shell.h>
-#include <kernel/cpu.h>
-#include <kernel/interrupts.h>
-#include <kernel/multiboot.h>
-
-#include <assert.h>
-#include <kernel/Devices/Keyboad.h>
 #include <kernel/Memory/MemoryManager.h>
 #include <kernel/Memory/MemoryRegion.h>
 #include <kernel/Memory/PhysicalAddressSpace.h>
+#include <kernel/Memory/VirtualAddress.h>
 #include <kernel/Memory/VirtualAddressSpace.h>
+#include <kernel/Shell.h>
+#include <kernel/arch/i386/APIC.h>
+#include <kernel/arch/i386/PIC.h>
+#include <kernel/cpu.h>
 #include <kernel/eflag.h>
+#include <kernel/interrupts.h>
 #include <kernel/io.h>
+#include <kernel/multiboot.h>
 #include <kernel/panic.h>
 #include <stdio.h>
 #include <string.h>
 
 multiboot_info_t *multiboot_info_ptr = nullptr;
-VGAEntry *VGA_MEMORY = (VGAEntry *)0xC03FF000; // remapped after boot
 
 int print_memory_map()
 {
@@ -66,29 +68,34 @@ multiboot_memory_map_t *get_usable_ram()
     return nullptr;
 }
 
-void init_apic()
+APIC *init_apic(MemoryManager &mem_mgr)
 {
-    if (cpuid_apic()) {
-        printf("CPU has APIC\n");
-    } else {
-        printf("CPU does not have APIC\n");
+    if (!cpuid_apic()) {
+        panic("CPU does not have APIC\n");
     }
-    // TODO
+    auto apic_mem = mem_mgr.map_physical_pages(PhysicalAddress(APIC_BASE),
+                                               PTE_SU | PTE_P | PTE_RW,
+                                               1);
+    auto phy = mem_mgr.virt_space().translate_to_physical_addr(
+        VirtualAddress(apic_mem));
+    auto apic = new APIC(reinterpret_cast<uintptr_t>(apic_mem));
+    APIC_EOI_RAII::set_instance(apic);
+    apic->init();
+    //printf("Set APIC Timer\n");
+    return apic;
 }
 
+static TTY tty = TTY(VGA_WIDTH, VGA_HEIGHT, VGA_MEMORY);
 
 extern "C" void kernel_main(void)
 {
-    CurrentTTY = TTY(VGA_WIDTH, VGA_HEIGHT, (VGAEntry *)0xC03FF000);
-    CurrentTTY.set_clear();
+    auto& dev_mgr = DeviceManager::the();
+    tty = TTY(VGA_WIDTH, VGA_HEIGHT, VGA_MEMORY);
+    tty.set_clear();
+    dev_mgr.set_tty(&tty);
     idtr_init();
+    disable_pic();
     disable_nmi();
-    init_apic();
-    printf("Hello, kernel World!\n");
-    if (multiboot_info_ptr == nullptr) {
-        printf("No multiboot header found\n");
-    }
-    print_memory_map();
 
     // init memory manager
     auto reg_ptr = get_usable_ram();
@@ -98,8 +105,16 @@ extern "C" void kernel_main(void)
     auto mem_mgr = MemoryManager(phy_addr, vs);
     auto page_ptr = mem_mgr.get_pages(1024, PTE_P | PTE_RW);
     heap_init(page_ptr, 1024 * 4096);
-    auto keyboard = new PS_2Keyboard();
 
-    Shell shell = Shell(keyboard, &CurrentTTY);
+    dev_mgr.init_devices();
+    init_apic(mem_mgr);
+    enable_interrupts();
+
+    printf("Hello, kernel World, Welcome in tty1!\n");
+    if (multiboot_info_ptr == nullptr) {
+        panic("No multiboot header found\n");
+    }
+    //print_memory_map();
+    Shell shell = Shell(dev_mgr.keyboard(), dev_mgr.tty());
     shell.run();
 }
