@@ -23,9 +23,10 @@ include_directories("arch/${HOSTARCH}")
 file(GLOB ARCH_SOURCES "arch/${HOSTARCH}/*.c" "arch/${HOSTARCH}/*.cpp" "arch/${HOSTARCH}/*.S")
 file(GLOB MEMORY_SOURCES "kernel/Memory/*.cpp")
 file(GLOB DEVICE_SOURCES "kernel/Devices/*.cpp")
+file(GLOB TASKS_SOURCES "kernel/Tasks/*.cpp")
 file(GLOB KERNEL_SOURCES "kernel/*.cpp")
 
-set(KERNEL_SOURCES ${KERNEL_SOURCES} ${MEMORY_SOURCES} ${DEVICE_SOURCES})
+set(KERNEL_SOURCES ${KERNEL_SOURCES} ${TASKS_SOURCES} ${MEMORY_SOURCES} ${DEVICE_SOURCES})
 
 # Combine all source files
 set(SOURCES ${ARCH_SOURCES} ${KERNEL_SOURCES})

@@ -3,7 +3,7 @@ Library: Init (memory locations)
 
 Device: stadarized Device Driver
 ! Device: Organize device init/storage
-! Device: Timer
+! Device: Add Internal APIC Interrupts
 Device: Serial printf
 Device: cpuinfo
 Device: Add blinking cursor
