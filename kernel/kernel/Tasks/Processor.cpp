@@ -15,11 +15,11 @@ Thread* Processor::next_thread() {
     if (m_threads.empty()) {
        return &Thread::idle_thread;
     }
-    auto t = m_threads.dequeue();
+   // auto t = m_threads.dequeue();
     if (m_running_thread == nullptr) {
         m_running_thread = m_threads.head();
     } else {
-        m_running_thread = m_threads.next(m_running_thread);
+        //m_running_thread = m_threads.next(m_running_thread);
     }
 
     return m_running_thread;

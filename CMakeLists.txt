@@ -66,7 +66,7 @@ add_custom_target(build_iso)
 
 add_custom_target(run-qemu
   DEPENDS myos.kernel
-  COMMAND qemu-system-i386 -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
+  COMMAND qemu-system-i386 -serial stdio -serial file:kernellog.txt -kernel "${CMAKE_CURRENT_BINARY_DIR}/kernel/myos.kernel"
   COMMENT "Run kernel binary in qemu with -kernel"
 )
 

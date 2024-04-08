@@ -19,6 +19,7 @@
 #include <kernel/panic.h>
 #include <stdio.h>
 #include <string.h>
+#include <kernel/Serial.h>
 
 multiboot_info_t *multiboot_info_ptr = nullptr;
 
@@ -89,6 +90,7 @@ static TTY tty = TTY(VGA_WIDTH, VGA_HEIGHT, VGA_MEMORY);
 
 extern "C" void kernel_main(void)
 {
+    DEBUG((char*)"Hello, kernel World, Welcome in tty1!\n");
     auto& dev_mgr = DeviceManager::the();
     tty = TTY(VGA_WIDTH, VGA_HEIGHT, VGA_MEMORY);
     tty.set_clear();

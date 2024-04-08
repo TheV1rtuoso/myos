@@ -1,4 +1,4 @@
-
+#pragma once
 #include <kernel/Memory/Heap.h>
 #include <kernel/types.h>
 
@@ -6,10 +6,7 @@ using Register = u32;
 constexpr u32 STACK_SIZE = 4096;
 
 
-void* create_stack() {
-    auto ptr = new u8[STACK_SIZE];
-    return ptr + STACK_SIZE;
-}
+void* create_stack();
 
 class Thread {
 

@@ -1,3 +1,7 @@
+#pragma once
+
+#include <kernel/io.h>
+
 #define COM1_PORT 0x3F8
 #define COM2_PORT 0x2F8
 #define COM3_PORT 0x3E8
@@ -6,3 +10,10 @@
 #define COM6_PORT 0x4F8
 #define COM7_PORT 0x5E8
 #define COM8_PORT 0x4E8
+
+#define DEBUG(x) { char* c = x; \
+ while (*c != '\0') {      \
+     outb(COM1_PORT, *c); \
+     c++;\
+ }\
+}

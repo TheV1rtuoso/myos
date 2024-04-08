@@ -6,6 +6,10 @@ int idle_function () {
         __asm__("hlt");
     }
 }
+void* create_stack(){
+    auto ptr = new u8[STACK_SIZE];
+    return ptr + STACK_SIZE;
+}
 
 Thread Thread::idle_thread = Thread(
     (Register) idle_function,
